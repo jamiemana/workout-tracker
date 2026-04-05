@@ -5,7 +5,7 @@ import { useSettingsStore } from '@/lib/stores/settingsStore'
 import { useRestTimer } from '@/lib/hooks/useRestTimer'
 import { getSessionStats } from '@/lib/utils/volume'
 import { triggerAutoBackup } from '@/lib/utils/backup'
-import type { ExerciseTemplate } from '@/lib/data/templates'
+import { workoutTemplates, type ExerciseTemplate } from '@/lib/data/templates'
 import ExerciseBlock from '@/components/workout/ExerciseBlock'
 import SupersetBlock from '@/components/workout/SupersetBlock'
 import CompletionSummary from '@/components/workout/CompletionSummary'
@@ -18,11 +18,15 @@ export default function Today() {
   const sets = useWorkoutStore((s) => s.sets)
   const startSession = useWorkoutStore((s) => s.startSession)
   const finishWorkout = useWorkoutStore((s) => s.finishWorkout)
+  const clearSession = useWorkoutStore((s) => s.clearSession)
   const restTimerDefault = useSettingsStore((s) => s.restTimerDefault)
   const autoBackup = useSettingsStore((s) => s.autoBackup)
   const sessionStarted = useRef(false)
 
   const [showCompletion, setShowCompletion] = useState(false)
+  const [workoutFinished, setWorkoutFinished] = useState(false)
+  const [overrideTemplateId, setOverrideTemplateId] = useState<string | null>(null)
+  const [showSwitcher, setShowSwitcher] = useState(false)
   const [stats, setStats] = useState<{
     totalVolume: number
     prCount: number
@@ -34,19 +38,25 @@ export default function Today() {
 
   const timer = useRestTimer()
 
+  // Determine which template to use (override or rotation)
+  const effectiveTemplate = overrideTemplateId
+    ? workoutTemplates.find((t) => t.id === overrideTemplateId) ?? todayInfo?.template
+    : todayInfo?.template
+
   // Auto-start session when on workout day
   useEffect(() => {
-    if (todayInfo && !todayInfo.isRestDay && todayInfo.template && !activeSession && !sessionStarted.current) {
+    if (workoutFinished) return
+    if (todayInfo && !todayInfo.isRestDay && effectiveTemplate && !activeSession && !sessionStarted.current) {
       sessionStarted.current = true
       const today = new Date().toISOString().split('T')[0]
       startSession(
-        todayInfo.templateId!,
+        effectiveTemplate.id,
         today,
         todayInfo.cycleNumber,
-        todayInfo.template.exercises
+        effectiveTemplate.exercises
       )
     }
-  }, [todayInfo, activeSession, startSession])
+  }, [todayInfo, activeSession, startSession, workoutFinished, effectiveTemplate])
 
   const handleSetCompleted = useCallback(() => {
     timer.start(restTimerDefault)
@@ -56,7 +66,6 @@ export default function Today() {
   // Check if all sets completed
   useEffect(() => {
     if (sets.length > 0 && sets.every((s) => s.completed)) {
-      // Small delay to let the last animation play
       const t = setTimeout(async () => {
         if (activeSession?.id) {
           const s = await getSessionStats(activeSession.id)
@@ -77,12 +86,21 @@ export default function Today() {
   const handleFinish = async () => {
     const session = await finishWorkout()
     setShowCompletion(false)
+    setWorkoutFinished(true)
     timer.stop()
     setTimerActive(false)
 
     if (autoBackup && session) {
       setTimeout(() => triggerAutoBackup(), 500)
     }
+  }
+
+  const handleSwitchWorkout = (templateId: string) => {
+    clearSession()
+    sessionStarted.current = false
+    setWorkoutFinished(false)
+    setOverrideTemplateId(templateId)
+    setShowSwitcher(false)
   }
 
   if (!todayInfo) {
@@ -93,28 +111,70 @@ export default function Today() {
     )
   }
 
-  // Rest day
-  if (todayInfo.isRestDay) {
+  // Finished workout or rest day
+  if ((todayInfo.isRestDay && !overrideTemplateId) || workoutFinished) {
     return (
       <div className="min-h-screen bg-bg-primary">
         <Header />
         <div className="flex flex-col items-center justify-center px-6" style={{ minHeight: 'calc(100vh - 120px)' }}>
-          <h1 className="text-3xl font-semibold text-text-primary mb-4">Rest Day</h1>
-          {todayInfo.nextWorkout && (
-            <p className="text-sm text-text-tertiary">
-              Next up: <span className="text-text-secondary">{todayInfo.nextWorkout.template.name}</span>{' '}
-              &middot; {formatDate(todayInfo.nextWorkout.date)}
-            </p>
+          {workoutFinished ? (
+            <>
+              <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-accent-lime/15">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-accent-lime">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+              <h1 className="text-2xl font-semibold text-text-primary mb-2">Done for today</h1>
+              <p className="text-sm text-text-tertiary mb-6">Nice work. Rest up.</p>
+            </>
+          ) : (
+            <>
+              <h1 className="text-3xl font-semibold text-text-primary mb-4">Rest Day</h1>
+              {todayInfo.nextWorkout && (
+                <p className="text-sm text-text-tertiary mb-6">
+                  Next up: <span className="text-text-secondary">{todayInfo.nextWorkout.template.name}</span>{' '}
+                  &middot; {formatDate(todayInfo.nextWorkout.date)}
+                </p>
+              )}
+            </>
+          )}
+
+          {/* Switch workout button */}
+          <button
+            onClick={() => setShowSwitcher(true)}
+            className="rounded-lg border border-border-subtle bg-bg-secondary px-5 py-2.5 text-sm font-medium text-text-secondary"
+          >
+            Start a different workout
+          </button>
+
+          {/* Workout switcher */}
+          {showSwitcher && (
+            <div className="mt-4 w-full max-w-xs space-y-2">
+              {workoutTemplates.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => handleSwitchWorkout(t.id)}
+                  className="w-full rounded-lg border border-border-default bg-bg-tertiary px-4 py-3 text-left text-sm font-medium text-text-primary transition-colors hover:bg-bg-input"
+                >
+                  {t.name}
+                </button>
+              ))}
+              <button
+                onClick={() => setShowSwitcher(false)}
+                className="w-full rounded-lg px-4 py-2 text-xs text-text-muted"
+              >
+                Cancel
+              </button>
+            </div>
           )}
         </div>
       </div>
     )
   }
 
-  const template = todayInfo.template
+  const template = effectiveTemplate
   if (!template) return null
 
-  // Group exercises into blocks (standalone or superset)
   const blocks = buildExerciseBlocks(template.exercises)
 
   const minutes = Math.floor(timer.timeLeft / 60)
@@ -126,17 +186,43 @@ export default function Today() {
       <Header />
 
       <div className="px-4 pb-4">
-        {/* Header area */}
-        <p className="text-[11px] font-medium uppercase tracking-widest text-text-muted">
-          Today&apos;s Workout
-        </p>
-        <h1 className="mt-1 text-[22px] font-semibold text-text-primary">
-          {template.name}
-        </h1>
-        <p className="text-xs text-text-tertiary">
-          Cycle {todayInfo.cycleNumber} &middot;{' '}
-          {formatDate(new Date())}
-        </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-[11px] font-medium uppercase tracking-widest text-text-muted">
+              Today&apos;s Workout
+            </p>
+            <h1 className="mt-1 text-[22px] font-semibold text-text-primary">
+              {template.name}
+            </h1>
+            <p className="text-xs text-text-tertiary">
+              Cycle {todayInfo.cycleNumber} &middot;{' '}
+              {formatDate(new Date())}
+            </p>
+          </div>
+          <button
+            onClick={() => setShowSwitcher(!showSwitcher)}
+            className="mt-1 rounded-md bg-bg-input px-3 py-1.5 text-xs font-medium text-text-secondary"
+          >
+            Switch
+          </button>
+        </div>
+
+        {/* Workout switcher dropdown */}
+        {showSwitcher && (
+          <div className="mt-3 space-y-1.5 rounded-xl border border-border-default bg-bg-secondary p-3">
+            {workoutTemplates
+              .filter((t) => t.id !== template.id)
+              .map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => handleSwitchWorkout(t.id)}
+                  className="w-full rounded-lg bg-bg-tertiary px-4 py-2.5 text-left text-sm font-medium text-text-primary transition-colors hover:bg-bg-input"
+                >
+                  {t.name}
+                </button>
+              ))}
+          </div>
+        )}
       </div>
 
       {/* Exercise list */}
