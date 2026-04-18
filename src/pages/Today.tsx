@@ -43,10 +43,10 @@ export default function Today() {
     ? workoutTemplates.find((t) => t.id === overrideTemplateId) ?? todayInfo?.template
     : todayInfo?.template
 
-  // Auto-start session when on workout day
+  // Auto-start session when we have a template to work out (today's rotation or an override)
   useEffect(() => {
     if (workoutFinished) return
-    if (todayInfo && !todayInfo.isRestDay && effectiveTemplate && !activeSession && !sessionStarted.current) {
+    if (todayInfo && effectiveTemplate && !activeSession && !sessionStarted.current) {
       sessionStarted.current = true
       const today = new Date().toISOString().split('T')[0]
       startSession(
