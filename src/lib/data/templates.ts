@@ -39,7 +39,7 @@ export const workoutTemplates: WorkoutTemplate[] = [
     exercises: [
       { id: 'pb_flat_db_press', name: 'Flat dumbbell press', targetSets: 3, targetReps: '6-8', supersetGroup: null, supersetPosition: null, equipmentType: 'dumbbell' },
       { id: 'pb_machine_dips', name: 'Machine/bench dips', targetSets: 2, targetReps: '8-10', supersetGroup: 'SS1', supersetPosition: 'a', equipmentType: 'machine' },
-      { id: 'pb_walking_lunges', name: 'Walking lunges', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS1', supersetPosition: 'b', equipmentType: 'dumbbell' },
+      { id: 'pb_swiss_ball_squat', name: 'Swiss ball squat', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS1', supersetPosition: 'b', equipmentType: 'dumbbell' },
       { id: 'pb_machine_shoulder_press', name: 'Machine shoulder press', targetSets: 2, targetReps: '8-10', supersetGroup: 'SS2', supersetPosition: 'a', equipmentType: 'machine' },
       { id: 'pb_seated_calf_raise', name: 'Seated calf raise', targetSets: 3, targetReps: '10-15', supersetGroup: 'SS2', supersetPosition: 'b', equipmentType: 'machine', isBodyweight: true },
       { id: 'pb_db_fly', name: 'Dumbbell fly', targetSets: 2, targetReps: '10-12', supersetGroup: 'SS3', supersetPosition: 'a', equipmentType: 'dumbbell' },
