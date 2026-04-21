@@ -9,10 +9,12 @@ interface SetRowProps {
   prType: string | null
   isBodyweight: boolean
   targetReps: string
+  unitLabel: 'kg' | 'lvl'
   indented?: boolean
   onWeightChange: (value: number | null) => void
   onRepsChange: (value: number | null) => void
   onComplete: () => void
+  onToggleUnit: () => void
 }
 
 export default function SetRow({
@@ -24,10 +26,12 @@ export default function SetRow({
   prType,
   isBodyweight,
   targetReps,
+  unitLabel,
   indented,
   onWeightChange,
   onRepsChange,
   onComplete,
+  onToggleUnit,
 }: SetRowProps) {
   const [showPRLabel, setShowPRLabel] = useState(false)
   const [animating, setAnimating] = useState(false)
@@ -130,7 +134,14 @@ export default function SetRow({
               }}
               className={`h-10 w-full rounded-md bg-bg-input px-3 font-mono text-sm ${valueColor} placeholder-text-muted disabled:opacity-70`}
             />
-            <span className={`ml-1 text-xs ${unitColor}`}>kg</span>
+            <button
+              type="button"
+              onClick={onToggleUnit}
+              disabled={completed}
+              className={`ml-1 rounded px-1 py-0.5 text-xs uppercase tracking-wide ${unitColor} disabled:opacity-70`}
+            >
+              {unitLabel}
+            </button>
           </div>
         )}
       </div>

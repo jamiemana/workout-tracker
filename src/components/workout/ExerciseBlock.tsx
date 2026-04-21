@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import type { ExerciseTemplate } from '@/lib/data/templates'
 import { useWorkoutStore } from '@/lib/stores/workoutStore'
+import { useSettingsStore } from '@/lib/stores/settingsStore'
 import { checkAndRecordPR } from '@/lib/utils/pr'
 import SetRow from './SetRow'
 
@@ -26,6 +27,10 @@ export default function ExerciseBlock({
   const updateSetInput = useWorkoutStore((s) => s.updateSetInput)
   const completeSet = useWorkoutStore((s) => s.completeSet)
   const markSetPR = useWorkoutStore((s) => s.markSetPR)
+  const exerciseUnit = useSettingsStore(
+    (s) => s.exerciseUnits[exercise.id] ?? 'kg'
+  )
+  const setExerciseUnit = useSettingsStore((s) => s.setExerciseUnit)
 
   const handleComplete = async (setNumber: number) => {
     const setInput = sets.find((s) => s.setNumber === setNumber)
@@ -77,6 +82,7 @@ export default function ExerciseBlock({
             prType={s.prType}
             isBodyweight={exercise.isBodyweight || false}
             targetReps={exercise.targetReps}
+            unitLabel={exerciseUnit}
             indented={indented}
             onWeightChange={(v) =>
               updateSetInput(exercise.id, s.setNumber, 'weight', v)
@@ -85,6 +91,9 @@ export default function ExerciseBlock({
               updateSetInput(exercise.id, s.setNumber, 'reps', v)
             }
             onComplete={() => handleComplete(s.setNumber)}
+            onToggleUnit={() =>
+              setExerciseUnit(exercise.id, exerciseUnit === 'kg' ? 'lvl' : 'kg')
+            }
           />
         ))}
       </div>

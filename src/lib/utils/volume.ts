@@ -8,7 +8,7 @@ export function calculateSetVolume(weight: number | null, reps: number): number 
 export async function getSessionVolume(sessionId: number): Promise<number> {
   const sets = await db.loggedSets.where('sessionId').equals(sessionId).toArray()
   return sets.reduce((total, s) => {
-    if (s.completed && s.weight !== null) {
+    if (s.completed && s.weight !== null && s.unit === 'kg') {
       return total + s.weight * s.reps
     }
     return total
@@ -23,8 +23,9 @@ export async function getSessionStats(sessionId: number) {
   const prs = await db.personalRecords.where('sessionId').equals(sessionId).toArray()
 
   const completedSets = sets.filter((s) => s.completed)
+  // Only kg sets contribute — lvl and bw don't combine meaningfully with weight.
   const totalVolume = completedSets.reduce((t, s) => {
-    return t + (s.weight ?? 0) * s.reps
+    return s.unit === 'kg' ? t + (s.weight ?? 0) * s.reps : t
   }, 0)
 
   let durationMinutes = 0

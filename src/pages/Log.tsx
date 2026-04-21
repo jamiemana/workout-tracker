@@ -35,8 +35,9 @@ export default function Log() {
       const sets = await db.loggedSets.where('sessionId').equals(session.id).toArray()
       const prs = await db.personalRecords.where('sessionId').equals(session.id).toArray()
 
+      // Only kg sets contribute to total volume — lvl and bw don't combine meaningfully.
       const totalVolume = sets
-        .filter((s) => s.completed)
+        .filter((s) => s.completed && s.unit === 'kg')
         .reduce((t, s) => t + (s.weight ?? 0) * s.reps, 0)
 
       let durationMinutes = 0
@@ -173,9 +174,11 @@ export default function Log() {
                                   key={s.id}
                                   className="rounded bg-bg-tertiary px-2 py-1 font-mono text-xs text-text-tertiary"
                                 >
-                                  {s.weight !== null
-                                    ? `${s.weight}kg × ${s.reps}`
-                                    : `BW × ${s.reps}`}
+                                  {s.weight === null
+                                    ? `BW × ${s.reps}`
+                                    : s.unit === 'lvl'
+                                    ? `L${s.weight} × ${s.reps}`
+                                    : `${s.weight}kg × ${s.reps}`}
                                 </span>
                               ))}
                             </div>

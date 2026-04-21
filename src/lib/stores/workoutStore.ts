@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { db, type LoggedSet, type WorkoutSession } from '../data/db'
 import type { ExerciseTemplate } from '../data/templates'
+import { useSettingsStore } from './settingsStore'
 
 interface SetInput {
   exerciseId: string
@@ -138,13 +139,15 @@ export const useWorkoutStore = create<WorkoutState>()((set, get) => ({
     const weight = setInput.weight
     const reps = setInput.reps ?? 0
     const isBodyweight = weight === null
+    const exerciseUnit =
+      useSettingsStore.getState().exerciseUnits[exerciseId] ?? 'kg'
 
     const loggedSet: LoggedSet = {
       sessionId: activeSession.id,
       exerciseId,
       setNumber,
       weight,
-      unit: isBodyweight ? 'bw' : 'kg',
+      unit: isBodyweight ? 'bw' : exerciseUnit,
       reps,
       completed: true,
       timestamp: new Date().toISOString(),

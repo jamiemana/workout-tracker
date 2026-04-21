@@ -16,7 +16,7 @@ export interface LoggedSet {
   exerciseId: string
   setNumber: number
   weight: number | null
-  unit: 'kg' | 'bw'
+  unit: 'kg' | 'bw' | 'lvl'
   reps: number
   completed: boolean
   timestamp: string

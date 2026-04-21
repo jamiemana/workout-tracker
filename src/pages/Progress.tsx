@@ -11,6 +11,7 @@ import {
 import { db } from '@/lib/data/db'
 import { getAllExercises } from '@/lib/data/templates'
 import { estimateOneRepMax } from '@/lib/utils/volume'
+import { useSettingsStore } from '@/lib/stores/settingsStore'
 import StatCard from '@/components/progress/StatCard'
 import Header from '@/components/layout/Header'
 
@@ -25,6 +26,11 @@ type ChartMode = 'weight' | '1rm'
 export default function Progress() {
   const exercises = useMemo(() => getAllExercises(), [])
   const [selectedExId, setSelectedExId] = useState(exercises[0]?.id ?? '')
+  const unit = useSettingsStore(
+    (s) => s.exerciseUnits[selectedExId] ?? 'kg'
+  )
+  const unitSuffix = unit === 'lvl' ? '' : 'kg'
+  const unitPrefix = unit === 'lvl' ? 'L' : ''
   const [chartData, setChartData] = useState<ChartPoint[]>([])
   const [mode, setMode] = useState<ChartMode>('weight')
   const [allTimePR, setAllTimePR] = useState<number>(0)
@@ -92,7 +98,7 @@ export default function Progress() {
           sets[0]
         )
       setCurrentBest(
-        `${bestSet.weight}kg × ${bestSet.reps}`
+        `${unitPrefix}${bestSet.weight}${unitSuffix} × ${bestSet.reps}`
       )
 
       if (points.length >= 2) {
@@ -216,7 +222,11 @@ export default function Progress() {
         {/* Summary cards */}
         <div className="grid grid-cols-3 gap-3">
           <StatCard label="Current Best" value={currentBest} accent="lime" />
-          <StatCard label="All-Time PR" value={`${allTimePR}kg`} accent="violet" />
+          <StatCard
+            label="All-Time PR"
+            value={`${unitPrefix}${allTimePR}${unitSuffix}`}
+            accent="violet"
+          />
           <StatCard
             label="Progress"
             value={`${progressPct >= 0 ? '+' : ''}${progressPct}%`}
