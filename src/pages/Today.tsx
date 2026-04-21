@@ -5,7 +5,11 @@ import { useSettingsStore } from '@/lib/stores/settingsStore'
 import { useRestTimer } from '@/lib/hooks/useRestTimer'
 import { getSessionStats } from '@/lib/utils/volume'
 import { triggerAutoBackup } from '@/lib/utils/backup'
-import { workoutTemplates, type ExerciseTemplate } from '@/lib/data/templates'
+import {
+  applyExerciseSwaps,
+  workoutTemplates,
+  type ExerciseTemplate,
+} from '@/lib/data/templates'
 import ExerciseBlock from '@/components/workout/ExerciseBlock'
 import SupersetBlock from '@/components/workout/SupersetBlock'
 import CompletionSummary from '@/components/workout/CompletionSummary'
@@ -175,7 +179,11 @@ export default function Today() {
   const template = effectiveTemplate
   if (!template) return null
 
-  const blocks = buildExerciseBlocks(template.exercises)
+  const effectiveExercises = applyExerciseSwaps(
+    template.exercises,
+    activeSession?.exerciseSwaps
+  )
+  const blocks = buildExerciseBlocks(effectiveExercises, template.exercises)
 
   const minutes = Math.floor(timer.timeLeft / 60)
   const seconds = timer.timeLeft % 60
@@ -232,13 +240,16 @@ export default function Today() {
             {block.type === 'superset' ? (
               <SupersetBlock
                 exerciseA={block.exerciseA!}
+                templateIdA={block.templateIdA!}
                 exerciseB={block.exerciseB!}
+                templateIdB={block.templateIdB!}
                 onSetCompleted={handleSetCompleted}
               />
             ) : (
               <div className="border-t border-border-default pt-4 first:border-t-0 first:pt-0">
                 <ExerciseBlock
                   exercise={block.exercise!}
+                  templateExerciseId={block.templateId!}
                   onSetCompleted={handleSetCompleted}
                 />
               </div>
@@ -324,31 +335,51 @@ export default function Today() {
 interface ExerciseBlock {
   type: 'standalone' | 'superset'
   exercise?: ExerciseTemplate
+  templateId?: string
   exerciseA?: ExerciseTemplate
+  templateIdA?: string
   exerciseB?: ExerciseTemplate
+  templateIdB?: string
 }
 
-function buildExerciseBlocks(exercises: ExerciseTemplate[]): ExerciseBlock[] {
+function buildExerciseBlocks(
+  effective: ExerciseTemplate[],
+  template: ExerciseTemplate[]
+): ExerciseBlock[] {
   const blocks: ExerciseBlock[] = []
   const processedGroups = new Set<string>()
 
-  for (const ex of exercises) {
-    if (ex.supersetGroup) {
-      if (processedGroups.has(ex.supersetGroup)) continue
-      processedGroups.add(ex.supersetGroup)
+  for (let i = 0; i < effective.length; i++) {
+    const ex = effective[i]
+    const templateEx = template[i]
+    const group = templateEx.supersetGroup
 
-      const a = exercises.find(
-        (e) => e.supersetGroup === ex.supersetGroup && e.supersetPosition === 'a'
+    if (group) {
+      if (processedGroups.has(group)) continue
+      processedGroups.add(group)
+
+      const aIdx = template.findIndex(
+        (t) => t.supersetGroup === group && t.supersetPosition === 'a'
       )
-      const b = exercises.find(
-        (e) => e.supersetGroup === ex.supersetGroup && e.supersetPosition === 'b'
+      const bIdx = template.findIndex(
+        (t) => t.supersetGroup === group && t.supersetPosition === 'b'
       )
 
-      if (a && b) {
-        blocks.push({ type: 'superset', exerciseA: a, exerciseB: b })
+      if (aIdx >= 0 && bIdx >= 0) {
+        blocks.push({
+          type: 'superset',
+          exerciseA: effective[aIdx],
+          templateIdA: template[aIdx].id,
+          exerciseB: effective[bIdx],
+          templateIdB: template[bIdx].id,
+        })
       }
     } else {
-      blocks.push({ type: 'standalone', exercise: ex })
+      blocks.push({
+        type: 'standalone',
+        exercise: ex,
+        templateId: templateEx.id,
+      })
     }
   }
 

@@ -1,6 +1,11 @@
 import { create } from 'zustand'
 import { db, type LoggedSet, type WorkoutSession } from '../data/db'
-import type { ExerciseTemplate } from '../data/templates'
+import {
+  applyExerciseSwaps,
+  getExerciseById,
+  getTemplateById,
+  type ExerciseTemplate,
+} from '../data/templates'
 import { useSettingsStore } from './settingsStore'
 
 interface SetInput {
@@ -24,10 +29,51 @@ interface WorkoutState {
   updateSetInput: (exerciseId: string, setNumber: number, field: 'weight' | 'reps', value: number | null) => void
   completeSet: (exerciseId: string, setNumber: number) => Promise<LoggedSet | null>
   markSetPR: (exerciseId: string, setNumber: number, prType: string) => void
+  toggleExerciseSwap: (templateExerciseId: string) => Promise<void>
   finishWorkout: () => Promise<WorkoutSession | null>
   startRestTimer: (durationSeconds: number) => void
   stopRestTimer: () => void
   clearSession: () => void
+}
+
+async function buildSetInputs(
+  sessionId: number,
+  exercises: ExerciseTemplate[],
+  templateId: string
+): Promise<SetInput[]> {
+  const loggedSets = await db.loggedSets.where({ sessionId }).toArray()
+  const prs = await db.personalRecords.where({ sessionId }).toArray()
+  const previousSets = await loadPreviousWeights(templateId, exercises)
+
+  const inputs: SetInput[] = []
+  for (const ex of exercises) {
+    for (let s = 1; s <= ex.targetSets; s++) {
+      const logged = loggedSets.find(
+        (l) => l.exerciseId === ex.id && l.setNumber === s
+      )
+      const pr = logged?.completed
+        ? prs.find(
+            (p) =>
+              p.exerciseId === ex.id &&
+              p.weight === logged.weight &&
+              p.reps === logged.reps
+          )
+        : undefined
+      const prev = previousSets.find(
+        (p) => p.exerciseId === ex.id && p.setNumber === s
+      )
+      inputs.push({
+        exerciseId: ex.id,
+        setNumber: s,
+        weight: logged?.weight ?? prev?.weight ?? null,
+        reps: logged?.reps ?? prev?.reps ?? null,
+        completed: logged?.completed ?? false,
+        isPR: !!pr,
+        prType: pr?.prType ?? null,
+      })
+    }
+  }
+  return inputs
 }
 
 export const useWorkoutStore = create<WorkoutState>()((set, get) => ({
@@ -43,37 +89,18 @@ export const useWorkoutStore = create<WorkoutState>()((set, get) => ({
       return
     }
 
-    const sessionId = await db.workoutSessions.add({
+    const sessionId = (await db.workoutSessions.add({
       templateId,
       date,
       cycleNumber,
       startedAt: new Date().toISOString(),
       completedAt: null,
       notes: null,
-    })
+      exerciseSwaps: {},
+    })) as number
 
     const session = await db.workoutSessions.get(sessionId)
-
-    // Load previous weights for pre-fill
-    const previousSets = await loadPreviousWeights(templateId, exercises)
-
-    const setInputs: SetInput[] = []
-    for (const ex of exercises) {
-      for (let s = 1; s <= ex.targetSets; s++) {
-        const prev = previousSets.find(
-          (p) => p.exerciseId === ex.id && p.setNumber === s
-        )
-        setInputs.push({
-          exerciseId: ex.id,
-          setNumber: s,
-          weight: prev?.weight ?? null,
-          reps: prev?.reps ?? null,
-          completed: false,
-          isPR: false,
-          prType: null,
-        })
-      }
-    }
+    const setInputs = await buildSetInputs(sessionId, exercises, templateId)
 
     set({ activeSession: session || null, sets: setInputs })
   },
@@ -82,37 +109,18 @@ export const useWorkoutStore = create<WorkoutState>()((set, get) => ({
     const session = await db.workoutSessions.get(sessionId)
     if (!session) return
 
-    const loggedSets = await db.loggedSets.where({ sessionId }).toArray()
-    const prs = await db.personalRecords.where({ sessionId }).toArray()
-
-    const template = (await import('../data/templates')).getTemplateById(session.templateId)
+    const template = getTemplateById(session.templateId)
     if (!template) return
 
-    const setInputs: SetInput[] = []
-    for (const ex of template.exercises) {
-      for (let s = 1; s <= ex.targetSets; s++) {
-        const logged = loggedSets.find(
-          (l) => l.exerciseId === ex.id && l.setNumber === s
-        )
-        const pr = logged?.completed
-          ? prs.find(
-              (p) =>
-                p.exerciseId === ex.id &&
-                p.weight === logged.weight &&
-                p.reps === logged.reps
-            )
-          : undefined
-        setInputs.push({
-          exerciseId: ex.id,
-          setNumber: s,
-          weight: logged?.weight ?? null,
-          reps: logged?.reps ?? null,
-          completed: logged?.completed ?? false,
-          isPR: !!pr,
-          prType: pr?.prType ?? null,
-        })
-      }
-    }
+    const effectiveExercises = applyExerciseSwaps(
+      template.exercises,
+      session.exerciseSwaps
+    )
+    const setInputs = await buildSetInputs(
+      sessionId,
+      effectiveExercises,
+      session.templateId
+    )
 
     set({ activeSession: session, sets: setInputs })
   },
@@ -175,6 +183,49 @@ export const useWorkoutStore = create<WorkoutState>()((set, get) => ({
           : s
       ),
     }))
+  },
+
+  toggleExerciseSwap: async (templateExerciseId) => {
+    const { activeSession } = get()
+    if (!activeSession?.id) return
+
+    const template = getTemplateById(activeSession.templateId)
+    if (!template) return
+
+    const templateEx = template.exercises.find(
+      (e) => e.id === templateExerciseId
+    )
+    if (!templateEx?.alternativeId) return
+
+    const currentId =
+      activeSession.exerciseSwaps?.[templateExerciseId] ?? templateExerciseId
+    const currentEx = getExerciseById(currentId) ?? templateEx
+    const nextId = currentEx.alternativeId ?? templateExerciseId
+
+    const nextSwaps = { ...(activeSession.exerciseSwaps ?? {}) }
+    if (nextId === templateExerciseId) {
+      delete nextSwaps[templateExerciseId]
+    } else {
+      nextSwaps[templateExerciseId] = nextId
+    }
+
+    await db.workoutSessions.update(activeSession.id, {
+      exerciseSwaps: nextSwaps,
+    })
+    const updated = await db.workoutSessions.get(activeSession.id)
+    if (!updated) return
+
+    const effectiveExercises = applyExerciseSwaps(
+      template.exercises,
+      updated.exerciseSwaps
+    )
+    const setInputs = await buildSetInputs(
+      activeSession.id,
+      effectiveExercises,
+      activeSession.templateId
+    )
+
+    set({ activeSession: updated, sets: setInputs })
   },
 
   finishWorkout: async () => {

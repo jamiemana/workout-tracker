@@ -8,6 +8,8 @@ export interface WorkoutSession {
   startedAt: string
   completedAt: string | null
   notes: string | null
+  // templateExerciseId -> currentExerciseId. Missing or equal = no swap.
+  exerciseSwaps?: Record<string, string>
 }
 
 export interface LoggedSet {

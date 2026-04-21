@@ -7,6 +7,7 @@ import SetRow from './SetRow'
 
 interface ExerciseBlockProps {
   exercise: ExerciseTemplate
+  templateExerciseId: string
   indented?: boolean
   hideHeader?: boolean
   onSetCompleted: () => void
@@ -14,6 +15,7 @@ interface ExerciseBlockProps {
 
 export default function ExerciseBlock({
   exercise,
+  templateExerciseId,
   indented,
   hideHeader,
   onSetCompleted,
@@ -31,6 +33,10 @@ export default function ExerciseBlock({
     (s) => s.exerciseUnits[exercise.id] ?? 'kg'
   )
   const setExerciseUnit = useSettingsStore((s) => s.setExerciseUnit)
+  const toggleExerciseSwap = useWorkoutStore((s) => s.toggleExerciseSwap)
+  const canSwap = !!exercise.alternativeId
+  const isSwapped = templateExerciseId !== exercise.id
+  const anyCompleted = sets.some((s) => s.completed)
 
   const handleComplete = async (setNumber: number) => {
     const setInput = sets.find((s) => s.setNumber === setNumber)
@@ -60,9 +66,40 @@ export default function ExerciseBlock({
     <div className="space-y-1.5">
       {!hideHeader && (
         <div style={{ marginLeft: indented ? 18 : 0 }}>
-          <h3 className="text-[15px] font-medium text-text-primary">
-            {exercise.name}
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-[15px] font-medium text-text-primary">
+              {exercise.name}
+            </h3>
+            {canSwap && (
+              <button
+                type="button"
+                onClick={() => toggleExerciseSwap(templateExerciseId)}
+                disabled={anyCompleted}
+                aria-label="Swap variant"
+                className={`flex h-6 w-6 items-center justify-center rounded-md text-text-muted transition-colors disabled:opacity-40 ${
+                  isSwapped
+                    ? 'bg-accent-cyan/15 text-accent-cyan'
+                    : 'hover:bg-bg-input'
+                }`}
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="17 1 21 5 17 9" />
+                  <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                  <polyline points="7 23 3 19 7 15" />
+                  <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+                </svg>
+              </button>
+            )}
+          </div>
           <p className="text-xs text-text-tertiary">
             {exercise.targetSets}
             {exercise.targetSetsMax ? `-${exercise.targetSetsMax}` : ''} sets &middot;{' '}
