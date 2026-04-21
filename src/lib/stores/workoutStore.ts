@@ -93,16 +93,21 @@ export const useWorkoutStore = create<WorkoutState>()((set, get) => ({
         const logged = loggedSets.find(
           (l) => l.exerciseId === ex.id && l.setNumber === s
         )
-        const pr = prs.find(
-          (p) => p.exerciseId === ex.id
-        )
+        const pr = logged?.completed
+          ? prs.find(
+              (p) =>
+                p.exerciseId === ex.id &&
+                p.weight === logged.weight &&
+                p.reps === logged.reps
+            )
+          : undefined
         setInputs.push({
           exerciseId: ex.id,
           setNumber: s,
           weight: logged?.weight ?? null,
           reps: logged?.reps ?? null,
           completed: logged?.completed ?? false,
-          isPR: !!pr && logged?.completed === true,
+          isPR: !!pr,
           prType: pr?.prType ?? null,
         })
       }
@@ -145,7 +150,8 @@ export const useWorkoutStore = create<WorkoutState>()((set, get) => ({
       timestamp: new Date().toISOString(),
     }
 
-    await db.loggedSets.add(loggedSet)
+    const id = await db.loggedSets.add(loggedSet)
+    loggedSet.id = id
 
     set((state) => ({
       sets: state.sets.map((s) =>

@@ -32,7 +32,7 @@ export default function ExerciseBlock({
     if (!setInput || !activeSession?.id) return
 
     const logged = await completeSet(exercise.id, setNumber)
-    if (!logged) return
+    if (!logged || logged.id === undefined) return
 
     // Check for PR
     const result = await checkAndRecordPR(
@@ -40,7 +40,8 @@ export default function ExerciseBlock({
       logged.weight,
       logged.reps,
       activeSession.id,
-      activeSession.date
+      activeSession.date,
+      logged.id
     )
 
     if (result.isPR && result.prType) {
