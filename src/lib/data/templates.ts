@@ -38,7 +38,7 @@ export const workoutTemplates: WorkoutTemplate[] = [
     name: 'Push B',
     exercises: [
       { id: 'pb_flat_db_press', name: 'Flat dumbbell press', targetSets: 3, targetReps: '6-8', supersetGroup: null, supersetPosition: null, equipmentType: 'dumbbell' },
-      { id: 'pb_machine_dips', name: 'Machine/bench dips', targetSets: 2, targetReps: '8-10', supersetGroup: 'SS1', supersetPosition: 'a', equipmentType: 'machine' },
+      { id: 'pb_dips', name: 'Dips', targetSets: 2, targetReps: '8-10', supersetGroup: 'SS1', supersetPosition: 'a', equipmentType: 'bodyweight', isBodyweight: true },
       { id: 'pb_swiss_ball_squat', name: 'Swiss ball squat', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS1', supersetPosition: 'b', equipmentType: 'dumbbell' },
       { id: 'pb_machine_shoulder_press', name: 'Machine shoulder press', targetSets: 2, targetReps: '8-10', supersetGroup: 'SS2', supersetPosition: 'a', equipmentType: 'machine' },
       { id: 'pb_seated_calf_raise', name: 'Seated calf raise', targetSets: 3, targetReps: '10-15', supersetGroup: 'SS2', supersetPosition: 'b', equipmentType: 'machine', isBodyweight: true },
@@ -72,7 +72,7 @@ export const workoutTemplates: WorkoutTemplate[] = [
       { id: 'plb_chest_supported_row', name: 'Chest supported row', targetSets: 3, targetReps: '8-10', supersetGroup: 'SS1', supersetPosition: 'a', equipmentType: 'dumbbell' },
       { id: 'plb_hip_thrust', name: 'Hip thrust / glute bridge', targetSets: 3, targetReps: '8-12', supersetGroup: 'SS1', supersetPosition: 'b', equipmentType: 'barbell' },
       { id: 'plb_single_arm_cable_row', name: 'Single arm cable row', targetSets: 2, targetReps: '10-12', supersetGroup: null, supersetPosition: null, equipmentType: 'cable' },
-      { id: 'plb_reverse_pec_deck', name: 'Reverse pec deck / rear delt fly', targetSets: 2, targetReps: '12-15', supersetGroup: null, supersetPosition: null, equipmentType: 'machine' },
+      { id: 'plb_rear_delt_fly', name: 'Rear delt fly', targetSets: 2, targetReps: '12-15', supersetGroup: null, supersetPosition: null, equipmentType: 'dumbbell' },
       { id: 'plb_face_pull', name: 'Face pull', targetSets: 2, targetReps: '12-15', supersetGroup: null, supersetPosition: null, equipmentType: 'cable' },
       { id: 'plb_ez_bar_curl', name: 'EZ bar curl', targetSets: 3, targetReps: '8-12', supersetGroup: null, supersetPosition: null, equipmentType: 'barbell' },
       { id: 'plb_incline_db_curl', name: 'Incline DB curl', targetSets: 2, targetReps: '10-12', supersetGroup: null, supersetPosition: null, equipmentType: 'dumbbell' },
