@@ -28,6 +28,7 @@ export default function ExerciseBlock({
   const activeSession = useWorkoutStore((s) => s.activeSession)
   const updateSetInput = useWorkoutStore((s) => s.updateSetInput)
   const completeSet = useWorkoutStore((s) => s.completeSet)
+  const uncompleteSet = useWorkoutStore((s) => s.uncompleteSet)
   const markSetPR = useWorkoutStore((s) => s.markSetPR)
   const exerciseUnit = useSettingsStore(
     (s) => s.exerciseUnits[exercise.id] ?? 'kg'
@@ -38,14 +39,18 @@ export default function ExerciseBlock({
   const isSwapped = templateExerciseId !== exercise.id
   const anyCompleted = sets.some((s) => s.completed)
 
-  const handleComplete = async (setNumber: number) => {
+  const handleToggleComplete = async (setNumber: number) => {
     const setInput = sets.find((s) => s.setNumber === setNumber)
     if (!setInput || !activeSession?.id) return
+
+    if (setInput.completed) {
+      await uncompleteSet(exercise.id, setNumber)
+      return
+    }
 
     const logged = await completeSet(exercise.id, setNumber)
     if (!logged || logged.id === undefined) return
 
-    // Check for PR
     const result = await checkAndRecordPR(
       exercise.id,
       logged.weight,
@@ -127,7 +132,7 @@ export default function ExerciseBlock({
             onRepsChange={(v) =>
               updateSetInput(exercise.id, s.setNumber, 'reps', v)
             }
-            onComplete={() => handleComplete(s.setNumber)}
+            onComplete={() => handleToggleComplete(s.setNumber)}
             onToggleUnit={() =>
               setExerciseUnit(exercise.id, exerciseUnit === 'kg' ? 'lvl' : 'kg')
             }

@@ -3,6 +3,7 @@ interface CompletionSummaryProps {
   prCount: number
   durationMinutes: number
   onFinish: () => void
+  onCancel: () => void
 }
 
 export default function CompletionSummary({
@@ -10,6 +11,7 @@ export default function CompletionSummary({
   prCount,
   durationMinutes,
   onFinish,
+  onCancel,
 }: CompletionSummaryProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg-primary/90 backdrop-blur-sm">
@@ -48,6 +50,12 @@ export default function CompletionSummary({
           className="w-full rounded-lg bg-accent-lime py-3 text-sm font-semibold text-bg-primary transition-colors hover:bg-accent-lime/90"
         >
           Finish Workout
+        </button>
+        <button
+          onClick={onCancel}
+          className="mt-2 w-full rounded-lg py-2 text-xs font-medium text-text-muted hover:text-text-secondary"
+        >
+          Not yet
         </button>
       </div>
     </div>

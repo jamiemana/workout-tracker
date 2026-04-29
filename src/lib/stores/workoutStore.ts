@@ -28,6 +28,7 @@ interface WorkoutState {
   loadSession: (sessionId: number) => Promise<void>
   updateSetInput: (exerciseId: string, setNumber: number, field: 'weight' | 'reps', value: number | null) => void
   completeSet: (exerciseId: string, setNumber: number) => Promise<LoggedSet | null>
+  uncompleteSet: (exerciseId: string, setNumber: number) => Promise<void>
   markSetPR: (exerciseId: string, setNumber: number, prType: string) => void
   toggleExerciseSwap: (templateExerciseId: string) => Promise<void>
   finishWorkout: () => Promise<WorkoutSession | null>
@@ -173,6 +174,37 @@ export const useWorkoutStore = create<WorkoutState>()((set, get) => ({
     }))
 
     return loggedSet
+  },
+
+  uncompleteSet: async (exerciseId, setNumber) => {
+    const { activeSession } = get()
+    if (!activeSession?.id) return
+
+    const sessionId = activeSession.id
+    const logged = await db.loggedSets
+      .where({ sessionId, exerciseId, setNumber })
+      .first()
+    if (!logged?.id) return
+
+    await db.loggedSets.delete(logged.id)
+
+    if (logged.weight !== null) {
+      const stalePRs = await db.personalRecords
+        .where({ sessionId, exerciseId })
+        .filter((p) => p.weight === logged.weight && p.reps === logged.reps)
+        .toArray()
+      for (const p of stalePRs) {
+        if (p.id !== undefined) await db.personalRecords.delete(p.id)
+      }
+    }
+
+    set((state) => ({
+      sets: state.sets.map((s) =>
+        s.exerciseId === exerciseId && s.setNumber === setNumber
+          ? { ...s, completed: false, isPR: false, prType: null }
+          : s
+      ),
+    }))
   },
 
   markSetPR: (exerciseId, setNumber, prType) => {

@@ -39,7 +39,10 @@ export default function SetRow({
   const repsRef = useRef<HTMLInputElement>(null)
 
   const handleComplete = () => {
-    if (completed) return
+    if (completed) {
+      onComplete()
+      return
+    }
     setAnimating(true)
     onComplete()
     setTimeout(() => setAnimating(false), 200)
@@ -167,10 +170,10 @@ export default function SetRow({
         <span className={`ml-1 text-xs ${unitColor}`}>reps</span>
       </div>
 
-      {/* Check button */}
+      {/* Check button — tap when completed to undo */}
       <button
         onClick={handleComplete}
-        disabled={completed}
+        aria-label={completed ? 'Uncheck set to edit' : 'Mark set complete'}
         className={`flex h-8 w-8 items-center justify-center rounded-full border-2 transition-all ${
           completed
             ? isViolet

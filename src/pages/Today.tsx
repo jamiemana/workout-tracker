@@ -87,6 +87,19 @@ export default function Today() {
     }
   }, [sets, activeSession])
 
+  const handleEndWorkout = useCallback(async () => {
+    if (!activeSession?.id) return
+    const s = await getSessionStats(activeSession.id)
+    if (s) {
+      setStats({
+        totalVolume: s.totalVolume,
+        prCount: s.prCount,
+        durationMinutes: s.durationMinutes,
+      })
+    }
+    setShowCompletion(true)
+  }, [activeSession])
+
   const handleFinish = async () => {
     const session = await finishWorkout()
     setShowCompletion(false)
@@ -258,6 +271,17 @@ export default function Today() {
         ))}
       </div>
 
+      {/* End workout */}
+      <div className="px-4 mt-8">
+        <button
+          onClick={handleEndWorkout}
+          disabled={!sets.some((s) => s.completed)}
+          className="w-full rounded-lg border border-border-subtle bg-bg-secondary py-3 text-sm font-semibold text-text-secondary transition-colors hover:bg-bg-input disabled:opacity-40"
+        >
+          End workout
+        </button>
+      </div>
+
       {/* Rest timer */}
       {(timerActive || timer.isRunning || timer.timeLeft > 0) && (
         <div className="fixed bottom-16 left-0 right-0 z-50 border-t border-border-default bg-bg-secondary/95 backdrop-blur-sm px-4 py-3">
@@ -326,6 +350,7 @@ export default function Today() {
           prCount={stats.prCount}
           durationMinutes={stats.durationMinutes}
           onFinish={handleFinish}
+          onCancel={() => setShowCompletion(false)}
         />
       )}
     </div>
