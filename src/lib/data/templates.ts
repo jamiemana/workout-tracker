@@ -52,7 +52,7 @@ export const workoutTemplates: WorkoutTemplate[] = [
     exercises: [
       { id: 'pla_pullups', name: 'Pull-ups / lat pulldown', targetSets: 3, targetReps: '6-10', supersetGroup: 'SS1', supersetPosition: 'a', equipmentType: 'bodyweight', isBodyweight: true },
       { id: 'pla_romanian_deadlift', name: 'Romanian deadlift', targetSets: 3, targetReps: '8-10', supersetGroup: 'SS1', supersetPosition: 'b', equipmentType: 'barbell' },
-      { id: 'pla_bent_over_row', name: 'Bent over row', targetSets: 3, targetReps: '8-10', supersetGroup: 'SS2', supersetPosition: 'a', equipmentType: 'barbell' },
+      { id: 'pla_chest_supported_row', name: 'Chest supported dumbbell row', targetSets: 3, targetReps: '8-10', supersetGroup: 'SS2', supersetPosition: 'a', equipmentType: 'dumbbell' },
       { id: 'pla_hanging_leg_raise', name: 'Hanging leg raise', targetSets: 3, targetReps: '12-15', supersetGroup: 'SS2', supersetPosition: 'b', equipmentType: 'bodyweight', isBodyweight: true },
       { id: 'pla_seated_cable_row', name: 'Seated cable row', targetSets: 2, targetSetsMax: 3, targetReps: '10-12', supersetGroup: 'SS3', supersetPosition: 'a', equipmentType: 'cable', alternativeId: 'pla_hanging_row' },
       { id: 'pla_standing_calf_raise', name: 'Standing calf raise', targetSets: 3, targetReps: '10-15', supersetGroup: 'SS3', supersetPosition: 'b', equipmentType: 'machine', isBodyweight: true },
