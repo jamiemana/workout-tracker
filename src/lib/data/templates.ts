@@ -30,6 +30,7 @@ export const workoutTemplates: WorkoutTemplate[] = [
       { id: 'pa_lateral_raise', name: 'Lateral raise', targetSets: 3, targetReps: '12-15', supersetGroup: 'SS3', supersetPosition: 'b', equipmentType: 'dumbbell' },
       { id: 'pa_db_fly', name: 'Dumbbell fly', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS4', supersetPosition: 'a', equipmentType: 'dumbbell' },
       { id: 'pa_rope_pushdown', name: 'Rope pushdown', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS4', supersetPosition: 'b', equipmentType: 'cable' },
+      { id: 'pa_straight_bar_pushdown', name: 'Straight bar pushdown / skull crusher', targetSets: 2, targetReps: '10-12', supersetGroup: null, supersetPosition: null, equipmentType: 'cable' },
     ],
   },
   {
@@ -44,6 +45,7 @@ export const workoutTemplates: WorkoutTemplate[] = [
       { id: 'pb_cable_lateral_raise', name: 'Cable lateral raise', targetSets: 3, targetReps: '12-15', supersetGroup: 'SS3', supersetPosition: 'b', equipmentType: 'cable' },
       { id: 'pb_db_fly', name: 'Dumbbell fly', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS4', supersetPosition: 'a', equipmentType: 'dumbbell' },
       { id: 'pb_overhead_cable_ext', name: 'Overhead cable extension', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS4', supersetPosition: 'b', equipmentType: 'cable' },
+      { id: 'pb_straight_bar_pushdown', name: 'Straight bar pushdown / skull crusher', targetSets: 2, targetReps: '10-12', supersetGroup: null, supersetPosition: null, equipmentType: 'cable' },
     ],
   },
   {
