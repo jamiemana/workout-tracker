@@ -44,7 +44,7 @@ export const workoutTemplates: WorkoutTemplate[] = [
       { id: 'pb_dips', name: 'Dips', targetSets: 2, targetSetsMax: 3, targetReps: '8-10', supersetGroup: 'SS3', supersetPosition: 'a', equipmentType: 'bodyweight', isBodyweight: true },
       { id: 'pb_cable_lateral_raise', name: 'Cable lateral raise', targetSets: 3, targetReps: '12-15', supersetGroup: 'SS3', supersetPosition: 'b', equipmentType: 'cable' },
       { id: 'pb_db_fly', name: 'Dumbbell fly', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS4', supersetPosition: 'a', equipmentType: 'dumbbell' },
-      { id: 'pb_overhead_cable_ext', name: 'Overhead cable extension', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS4', supersetPosition: 'b', equipmentType: 'cable' },
+      { id: 'pb_single_arm_rope_ext', name: 'Single-arm rope extension', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS4', supersetPosition: 'b', equipmentType: 'cable' },
       { id: 'pb_straight_bar_pushdown', name: 'Straight bar pushdown / skull crusher', targetSets: 2, targetReps: '10-12', supersetGroup: null, supersetPosition: null, equipmentType: 'cable' },
     ],
   },
