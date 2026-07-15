@@ -72,10 +72,10 @@ export const workoutTemplates: WorkoutTemplate[] = [
       { id: 'plb_chest_supported_row', name: 'Chest supported row', targetSets: 3, targetReps: '8-10', supersetGroup: 'SS2', supersetPosition: 'a', equipmentType: 'dumbbell' },
       { id: 'plb_hanging_leg_raise', name: 'Hanging leg raise', targetSets: 3, targetReps: '12-15', supersetGroup: 'SS2', supersetPosition: 'b', equipmentType: 'bodyweight', isBodyweight: true },
       { id: 'plb_single_arm_cable_row', name: 'Single arm cable row', targetSets: 2, targetSetsMax: 3, targetReps: '10-12', supersetGroup: 'SS3', supersetPosition: 'a', equipmentType: 'cable', alternativeId: 'plb_hanging_row' },
-      { id: 'plb_seated_calf_raise', name: 'Seated calf raise', targetSets: 3, targetReps: '10-15', supersetGroup: 'SS3', supersetPosition: 'b', equipmentType: 'machine', isBodyweight: true },
+      { id: 'plb_cable_crunch', name: 'Cable crunch / weighted sit-up', targetSets: 3, targetReps: '12-15', supersetGroup: 'SS3', supersetPosition: 'b', equipmentType: 'cable' },
       { id: 'plb_ez_bar_curl', name: 'EZ bar curl', targetSets: 3, targetReps: '8-12', supersetGroup: 'SS4', supersetPosition: 'a', equipmentType: 'barbell' },
       { id: 'plb_face_pull', name: 'Face pull', targetSets: 3, targetReps: '12-15', supersetGroup: 'SS4', supersetPosition: 'b', equipmentType: 'cable' },
-      { id: 'plb_cable_crunch', name: 'Cable crunch / weighted sit-up', targetSets: 3, targetReps: '12-15', supersetGroup: null, supersetPosition: null, equipmentType: 'cable' },
+      { id: 'plb_hammer_curl', name: 'Hammer curl', targetSets: 3, targetReps: '10-12', supersetGroup: null, supersetPosition: null, equipmentType: 'dumbbell' },
     ],
   },
 ]
