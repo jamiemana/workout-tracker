@@ -7,6 +7,7 @@ import {
   type ExerciseTemplate,
 } from '../data/templates'
 import { useSettingsStore } from './settingsStore'
+import { computeTarget, type ProgressionTarget } from '../utils/progression'
 
 interface SetInput {
   exerciseId: string
@@ -21,6 +22,8 @@ interface SetInput {
 interface WorkoutState {
   activeSession: WorkoutSession | null
   sets: SetInput[]
+  /** Suggested load/reps per exercise for this session, from the previous one. */
+  targets: Record<string, ProgressionTarget>
   restTimerRunning: boolean
   restTimerEnd: number | null
 
@@ -41,13 +44,23 @@ async function buildSetInputs(
   sessionId: number,
   exercises: ExerciseTemplate[],
   templateId: string
-): Promise<SetInput[]> {
+): Promise<{ inputs: SetInput[]; targets: Record<string, ProgressionTarget> }> {
   const loggedSets = await db.loggedSets.where({ sessionId }).toArray()
   const prs = await db.personalRecords.where({ sessionId }).toArray()
-  const previousSets = await loadPreviousWeights(templateId, exercises)
+  const previous = await loadPreviousWeights(templateId, exercises)
+  const previousSets = previous.sets
+  const settings = useSettingsStore.getState()
 
   const inputs: SetInput[] = []
+  const targets: Record<string, ProgressionTarget> = {}
   for (const ex of exercises) {
+    const prevForEx = previousSets.filter((p) => p.exerciseId === ex.id)
+    const unit = settings.exerciseUnits[ex.id] ?? 'kg'
+    const declined =
+      previous.date !== null && settings.declinedIncrease[ex.id] === previous.date
+    const target = computeTarget(ex, prevForEx, unit, declined)
+    if (target) targets[ex.id] = target
+
     for (let s = 1; s <= ex.targetSets; s++) {
       const logged = loggedSets.find(
         (l) => l.exerciseId === ex.id && l.setNumber === s
@@ -63,10 +76,13 @@ async function buildSetInputs(
       const prev = previousSets.find(
         (p) => p.exerciseId === ex.id && p.setNumber === s
       )
+      // When progressing load, prefill every set with the new working weight.
+      const suggested =
+        target?.kind === 'increase' ? target.weight : prev?.weight ?? null
       inputs.push({
         exerciseId: ex.id,
         setNumber: s,
-        weight: logged?.weight ?? prev?.weight ?? null,
+        weight: logged?.weight ?? suggested,
         reps: logged?.reps ?? prev?.reps ?? null,
         completed: logged?.completed ?? false,
         isPR: !!pr,
@@ -74,12 +90,13 @@ async function buildSetInputs(
       })
     }
   }
-  return inputs
+  return { inputs, targets }
 }
 
 export const useWorkoutStore = create<WorkoutState>()((set, get) => ({
   activeSession: null,
   sets: [],
+  targets: {},
   restTimerRunning: false,
   restTimerEnd: null,
 
@@ -101,9 +118,9 @@ export const useWorkoutStore = create<WorkoutState>()((set, get) => ({
     })) as number
 
     const session = await db.workoutSessions.get(sessionId)
-    const setInputs = await buildSetInputs(sessionId, exercises, templateId)
+    const { inputs, targets } = await buildSetInputs(sessionId, exercises, templateId)
 
-    set({ activeSession: session || null, sets: setInputs })
+    set({ activeSession: session || null, sets: inputs, targets })
   },
 
   loadSession: async (sessionId) => {
@@ -117,13 +134,13 @@ export const useWorkoutStore = create<WorkoutState>()((set, get) => ({
       template.exercises,
       session.exerciseSwaps
     )
-    const setInputs = await buildSetInputs(
+    const { inputs, targets } = await buildSetInputs(
       sessionId,
       effectiveExercises,
       session.templateId
     )
 
-    set({ activeSession: session, sets: setInputs })
+    set({ activeSession: session, sets: inputs, targets })
   },
 
   updateSetInput: (exerciseId, setNumber, field, value) => {
@@ -251,13 +268,13 @@ export const useWorkoutStore = create<WorkoutState>()((set, get) => ({
       template.exercises,
       updated.exerciseSwaps
     )
-    const setInputs = await buildSetInputs(
+    const { inputs, targets } = await buildSetInputs(
       activeSession.id,
       effectiveExercises,
       activeSession.templateId
     )
 
-    set({ activeSession: updated, sets: setInputs })
+    set({ activeSession: updated, sets: inputs, targets })
   },
 
   finishWorkout: async () => {
@@ -268,7 +285,7 @@ export const useWorkoutStore = create<WorkoutState>()((set, get) => ({
     await db.workoutSessions.update(activeSession.id, { completedAt })
 
     const updated = await db.workoutSessions.get(activeSession.id)
-    set({ activeSession: null, sets: [], restTimerRunning: false, restTimerEnd: null })
+    set({ activeSession: null, sets: [], targets: {}, restTimerRunning: false, restTimerEnd: null })
     return updated || null
   },
 
@@ -284,14 +301,20 @@ export const useWorkoutStore = create<WorkoutState>()((set, get) => ({
   },
 
   clearSession: () => {
-    set({ activeSession: null, sets: [], restTimerRunning: false, restTimerEnd: null })
+    set({ activeSession: null, sets: [], targets: {}, restTimerRunning: false, restTimerEnd: null })
   },
 }))
+
+interface PreviousSets {
+  /** Date of the previous completed session of this template, or null. */
+  date: string | null
+  sets: { exerciseId: string; setNumber: number; weight: number | null; reps: number }[]
+}
 
 async function loadPreviousWeights(
   templateId: string,
   exercises: ExerciseTemplate[]
-): Promise<{ exerciseId: string; setNumber: number; weight: number | null; reps: number }[]> {
+): Promise<PreviousSets> {
   const previousSession = await db.workoutSessions
     .where('templateId')
     .equals(templateId)
@@ -299,22 +322,25 @@ async function loadPreviousWeights(
     .reverse()
     .sortBy('date')
 
-  if (!previousSession.length) return []
+  if (!previousSession.length) return { date: null, sets: [] }
 
   const lastSession = previousSession[0]
-  if (!lastSession.id) return []
+  if (!lastSession.id) return { date: null, sets: [] }
 
   const sets = await db.loggedSets
     .where('sessionId')
     .equals(lastSession.id)
     .toArray()
 
-  return sets
-    .filter((s) => exercises.some((e) => e.id === s.exerciseId))
-    .map((s) => ({
-      exerciseId: s.exerciseId,
-      setNumber: s.setNumber,
-      weight: s.weight,
-      reps: s.reps,
-    }))
+  return {
+    date: lastSession.date,
+    sets: sets
+      .filter((s) => exercises.some((e) => e.id === s.exerciseId))
+      .map((s) => ({
+        exerciseId: s.exerciseId,
+        setNumber: s.setNumber,
+        weight: s.weight,
+        reps: s.reps,
+      })),
+  }
 }
