@@ -141,7 +141,7 @@ export default function SetRow({
               type="button"
               onClick={onToggleUnit}
               disabled={completed}
-              className={`ml-1 rounded px-1 py-0.5 text-xs uppercase tracking-wide ${unitColor} disabled:opacity-70`}
+              className={`ml-1 rounded-sm px-1 py-0.5 text-xs uppercase tracking-wide ${unitColor} disabled:opacity-70`}
             >
               {unitLabel}
             </button>

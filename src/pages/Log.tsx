@@ -172,7 +172,7 @@ export default function Log() {
                               {exSets.map((s) => (
                                 <span
                                   key={s.id}
-                                  className="rounded bg-bg-tertiary px-2 py-1 font-mono text-xs text-text-tertiary"
+                                  className="rounded-sm bg-bg-tertiary px-2 py-1 font-mono text-xs text-text-tertiary"
                                 >
                                   {s.weight === null
                                     ? `BW × ${s.reps}`

@@ -29,7 +29,7 @@ export default function RestTimer({
   if (!active && !isRunning && timeLeft === 0) return null
 
   return (
-    <div className="fixed bottom-16 left-0 right-0 z-50 border-t border-border-default bg-bg-secondary/95 backdrop-blur-sm px-4 py-3">
+    <div className="fixed bottom-16 left-0 right-0 z-50 border-t border-border-default bg-bg-secondary/95 backdrop-blur-xs px-4 py-3">
       <div className="flex items-center justify-between max-w-lg mx-auto">
         <div className="flex items-center gap-3">
           {/* Clock icon */}

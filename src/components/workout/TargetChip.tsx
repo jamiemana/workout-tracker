@@ -20,7 +20,7 @@ export default function TargetChip({ target }: { target: ProgressionTarget | und
   return (
     <span
       title="Target for this session"
-      className={`inline-flex items-center rounded px-1.5 py-0.5 font-mono text-[11px] font-medium ${tone}`}
+      className={`inline-flex items-center rounded-sm px-1.5 py-0.5 font-mono text-[11px] font-medium ${tone}`}
     >
       {text}
     </span>

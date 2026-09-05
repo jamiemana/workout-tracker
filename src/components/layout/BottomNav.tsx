@@ -38,7 +38,7 @@ const tabs = [
 
 export default function BottomNav() {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border-default bg-bg-secondary/95 backdrop-blur-sm">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border-default bg-bg-secondary/95 backdrop-blur-xs">
       <div className="flex items-center justify-around max-w-lg mx-auto">
         {tabs.map((tab) => (
           <NavLink

@@ -19,7 +19,7 @@ export default function SupersetBlock({
   return (
     <div className="rounded-xl border border-border-default bg-bg-secondary p-4">
       <div className="mb-3 flex items-center gap-2">
-        <span className="rounded bg-accent-cyan/15 px-2 py-0.5 text-[11px] font-medium uppercase tracking-widest text-accent-cyan">
+        <span className="rounded-sm bg-accent-cyan/15 px-2 py-0.5 text-[11px] font-medium uppercase tracking-widest text-accent-cyan">
           Superset
         </span>
       </div>

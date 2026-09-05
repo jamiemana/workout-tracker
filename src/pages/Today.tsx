@@ -280,7 +280,7 @@ export default function Today() {
 
       {/* Rest timer */}
       {(timerActive || timer.isRunning || timer.timeLeft > 0) && (
-        <div className="fixed bottom-16 left-0 right-0 z-50 border-t border-border-default bg-bg-secondary/95 backdrop-blur-sm px-4 py-3">
+        <div className="fixed bottom-16 left-0 right-0 z-50 border-t border-border-default bg-bg-secondary/95 backdrop-blur-xs px-4 py-3">
           <div className="flex items-center justify-between max-w-lg mx-auto">
             <div className="flex items-center gap-3">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-accent-coral">

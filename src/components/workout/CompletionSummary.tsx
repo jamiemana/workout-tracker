@@ -14,7 +14,7 @@ export default function CompletionSummary({
   onCancel,
 }: CompletionSummaryProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg-primary/90 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-bg-primary/90 backdrop-blur-xs">
       <div className="mx-4 w-full max-w-sm rounded-2xl border border-border-default bg-bg-secondary p-6 animate-fade-in">
         <h2 className="mb-6 text-center text-xl font-semibold text-text-primary">
           Workout Complete
