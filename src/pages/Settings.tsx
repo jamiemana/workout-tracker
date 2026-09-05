@@ -7,10 +7,8 @@ import { db } from '@/lib/data/db'
 export default function Settings() {
   const navigate = useNavigate()
   const {
-    startDate,
     restTimerDefault,
     autoBackup,
-    setStartDate,
     setRestTimerDefault,
     setAutoBackup,
     setOnboarded,
@@ -78,19 +76,6 @@ export default function Settings() {
       </div>
 
       <div className="px-4 space-y-6">
-        {/* Start date */}
-        <div>
-          <label className="mb-2 block text-[11px] font-medium uppercase tracking-widest text-text-muted">
-            Program start date
-          </label>
-          <input
-            type="date"
-            value={startDate || ''}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="w-full rounded-lg border border-border-subtle bg-bg-input px-4 py-3 text-sm text-text-primary"
-          />
-        </div>
-
         {/* Rest timer */}
         <div>
           <label className="mb-2 block text-[11px] font-medium uppercase tracking-widest text-text-muted">

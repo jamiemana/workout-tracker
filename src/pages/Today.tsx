@@ -128,33 +128,21 @@ export default function Today() {
     )
   }
 
-  // Finished workout or rest day
-  if ((todayInfo.isRestDay && !overrideTemplateId) || workoutFinished) {
+  // Finished workout, or one was already finished today
+  if ((todayInfo.completedToday && !overrideTemplateId) || workoutFinished) {
     return (
       <div className="min-h-screen bg-bg-primary">
         <Header />
         <div className="flex flex-col items-center justify-center px-6" style={{ minHeight: 'calc(100vh - 120px)' }}>
-          {workoutFinished ? (
-            <>
-              <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-accent-lime/15">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-accent-lime">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              </div>
-              <h1 className="text-2xl font-semibold text-text-primary mb-2">Done for today</h1>
-              <p className="text-sm text-text-tertiary mb-6">Nice work. Rest up.</p>
-            </>
-          ) : (
-            <>
-              <h1 className="text-3xl font-semibold text-text-primary mb-4">Rest Day</h1>
-              {todayInfo.nextWorkout && (
-                <p className="text-sm text-text-tertiary mb-6">
-                  Next up: <span className="text-text-secondary">{todayInfo.nextWorkout.template.name}</span>{' '}
-                  &middot; {formatDate(todayInfo.nextWorkout.date)}
-                </p>
-              )}
-            </>
-          )}
+          <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-accent-lime/15">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-accent-lime">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-semibold text-text-primary mb-2">Done for today</h1>
+          <p className="text-sm text-text-tertiary mb-6">
+            Next up: <span className="text-text-secondary">{todayInfo.template.name}</span>
+          </p>
 
           {/* Switch workout button */}
           <button

@@ -1,13 +1,9 @@
-import { useState } from 'react'
 import { useSettingsStore } from '@/lib/stores/settingsStore'
 
 export default function Onboarding() {
-  const setStartDate = useSettingsStore((s) => s.setStartDate)
   const setOnboarded = useSettingsStore((s) => s.setOnboarded)
-  const [date, setDate] = useState(() => new Date().toISOString().split('T')[0])
 
   const handleStart = () => {
-    setStartDate(date)
     setOnboarded(true)
   }
 
@@ -29,20 +25,9 @@ export default function Onboarding() {
         </div>
 
         <div className="space-y-6">
-          <div>
-            <label className="mb-2 block text-[11px] font-medium uppercase tracking-widest text-text-muted">
-              Program start date
-            </label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-full rounded-lg border border-border-subtle bg-bg-input px-4 py-3 text-sm text-text-primary"
-            />
-            <p className="mt-2 text-xs text-text-tertiary">
-              When did (or will) you start the program? Today&apos;s workout is calculated from this date.
-            </p>
-          </div>
+          <p className="text-center text-xs text-text-tertiary">
+            Workouts run in sequence: Push A, Pull A, Push B, Pull B. Whenever you open the app, the next one is ready.
+          </p>
 
           <button
             onClick={handleStart}

@@ -1,12 +1,11 @@
-import { useMemo } from 'react'
-import { useSettingsStore } from '../stores/settingsStore'
-import { getTodayInfo, type TodayInfo } from '../utils/rotation'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { getRotationInfo, type RotationInfo } from '../utils/rotation'
 
-export function useRotation(date?: string): TodayInfo | null {
-  const startDate = useSettingsStore((s) => s.startDate)
-
-  return useMemo(() => {
-    if (!startDate) return null
-    return getTodayInfo(startDate, date)
-  }, [startDate, date])
+/**
+ * Live view of the rotation. Re-runs whenever a session is written, so the
+ * "next up" workout updates as soon as one is finished.
+ * Returns undefined while loading.
+ */
+export function useRotation(): RotationInfo | undefined {
+  return useLiveQuery(() => getRotationInfo(), [])
 }
