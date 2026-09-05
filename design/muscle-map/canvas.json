@@ -1,8 +1,74 @@
 {
   "artboards": [
-    { "file": "Main.dc.html", "title": "Progress · by muscle", "x": 0, "y": 0, "w": 390, "h": 2450, "is_interactive": true },
-    { "file": "Row.dc.html", "title": "Under an exercise (Today)", "x": 480, "y": 0, "w": 390, "h": 300, "is_interactive": true },
-    { "file": "Body.dc.html", "title": "Figure component", "x": 480, "y": 360, "w": 400, "h": 520 }
+    {
+      "file": "Main.dc.html",
+      "title": "Progress \u00b7 by muscle",
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 2450,
+      "is_interactive": true
+    },
+    {
+      "file": "Row.dc.html",
+      "title": "Under an exercise (Today)",
+      "x": 480,
+      "y": 0,
+      "w": 390,
+      "h": 300,
+      "is_interactive": true
+    },
+    {
+      "file": "Body.dc.html",
+      "title": "Figure component",
+      "x": 480,
+      "y": 360,
+      "w": 400,
+      "h": 520
+    },
+    {
+      "file": "FigureA.dc.html",
+      "title": "Option A \u00b7 Outlined anatomy",
+      "x": 480,
+      "y": 1020,
+      "w": 390,
+      "h": 640
+    },
+    {
+      "file": "FigureB.dc.html",
+      "title": "Option B \u00b7 Soft solid",
+      "x": 950,
+      "y": 1020,
+      "w": 390,
+      "h": 640
+    },
+    {
+      "file": "FigureC.dc.html",
+      "title": "Option C \u00b7 Line art",
+      "x": 1420,
+      "y": 1020,
+      "w": 390,
+      "h": 640
+    },
+    {
+      "file": "FigureD.dc.html",
+      "title": "Option D \u00b7 Flat separated",
+      "x": 1890,
+      "y": 1020,
+      "w": 390,
+      "h": 640
+    }
   ],
-  "launch": { "view": "canvas" }
+  "launch": {
+    "view": "canvas"
+  },
+  "annotations": [
+    {
+      "id": "figure-options",
+      "x": 480,
+      "y": 920,
+      "w": 420,
+      "text": "Figure directions to pick from. Same anatomy underneath, four rendering styles. Sample data: chest, arms and lats in the growth zone, delts maintaining, traps and core in focus."
+    }
+  ]
 }
