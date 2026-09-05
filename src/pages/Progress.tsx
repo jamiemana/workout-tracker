@@ -8,11 +8,16 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/lib/data/db'
-import { getAllExercises } from '@/lib/data/templates'
+import { getAllExercises, MUSCLES, type Muscle } from '@/lib/data/templates'
+import { LANDMARKS, zoneFor, type Zone } from '@/lib/data/volume-landmarks'
 import { estimateOneRepMax } from '@/lib/utils/volume'
+import { getWeeklySets, plannedSetsPerCycle } from '@/lib/utils/muscleVolume'
 import { useSettingsStore } from '@/lib/stores/settingsStore'
 import StatCard from '@/components/progress/StatCard'
+import ZoneBar from '@/components/progress/ZoneBar'
+import BodyMap from '@/components/progress/BodyMap'
 import Header from '@/components/layout/Header'
 
 interface ChartPoint {
@@ -36,6 +41,22 @@ export default function Progress() {
   const [allTimePR, setAllTimePR] = useState<number>(0)
   const [currentBest, setCurrentBest] = useState<string>('')
   const [progressPct, setProgressPct] = useState<number>(0)
+
+  const weekly = useLiveQuery(() => getWeeklySets(), [])
+  const planned = useMemo(() => plannedSetsPerCycle(), [])
+  const zones = useMemo(() => {
+    const z = {} as Record<Muscle, Zone>
+    for (const m of MUSCLES) z[m] = zoneFor(m, weekly?.[m] ?? 0)
+    return z
+  }, [weekly])
+  const rankedMuscles = useMemo(
+    () =>
+      MUSCLES.filter((m) => (weekly?.[m] ?? 0) > 0 || planned[m] > 0).sort(
+        (a, b) =>
+          (weekly?.[b] ?? 0) / LANDMARKS[b].max - (weekly?.[a] ?? 0) / LANDMARKS[a].max
+      ),
+    [weekly, planned]
+  )
 
   useEffect(() => {
     if (!selectedExId) return
@@ -129,6 +150,31 @@ export default function Progress() {
         <h1 className="mt-1 mb-4 text-[22px] font-semibold text-text-primary">
           Progress
         </h1>
+
+        {/* This week by muscle */}
+        <section className="mb-8">
+          <p className="mb-2 text-[11px] font-medium uppercase tracking-widest text-text-muted">
+            This week by muscle
+          </p>
+          <div className="rounded-xl border border-border-default bg-bg-secondary p-4">
+            <BodyMap zones={zones} />
+          </div>
+          <div className="mt-3 space-y-3">
+            {rankedMuscles.map((m) => (
+              <div key={m} className="rounded-xl border border-border-default bg-bg-secondary p-4">
+                <ZoneBar
+                  muscle={m}
+                  sets={weekly?.[m] ?? 0}
+                  caption={`plan ${Number.isInteger(planned[m]) ? planned[m] : planned[m].toFixed(1)} per cycle`}
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <p className="mb-2 text-[11px] font-medium uppercase tracking-widest text-text-muted">
+          By exercise
+        </p>
 
         {/* Exercise selector */}
         <div className="mb-4 overflow-x-auto pb-2">

@@ -1,11 +1,14 @@
-import { useMemo } from 'react'
-import type { ExerciseTemplate } from '@/lib/data/templates'
+import { useMemo, useState } from 'react'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { MUSCLE_LABELS, type ExerciseTemplate } from '@/lib/data/templates'
 import { useWorkoutStore } from '@/lib/stores/workoutStore'
 import { useSettingsStore } from '@/lib/stores/settingsStore'
 import { checkAndRecordPR } from '@/lib/utils/pr'
 import { computeTarget } from '@/lib/utils/progression'
+import { getWeeklySets } from '@/lib/utils/muscleVolume'
 import SetRow from './SetRow'
 import TargetChip from './TargetChip'
+import ZoneBar from '@/components/progress/ZoneBar'
 
 interface ExerciseBlockProps {
   exercise: ExerciseTemplate
@@ -60,6 +63,13 @@ export default function ExerciseBlock({
   const setExerciseUnit = useSettingsStore((s) => s.setExerciseUnit)
   const declinedOn = useSettingsStore((s) => s.declinedIncrease[exercise.id])
   const setDeclinedIncrease = useSettingsStore((s) => s.setDeclinedIncrease)
+
+  const [showDetail, setShowDetail] = useState(false)
+  // Only query while the panel is open; re-runs as sets are ticked.
+  const weekly = useLiveQuery(
+    () => (showDetail ? getWeeklySets() : undefined),
+    [showDetail]
+  )
 
   const canSwap = !!exercise.alternativeId
   const isSwapped = templateExerciseId !== exercise.id
@@ -120,9 +130,27 @@ export default function ExerciseBlock({
               {label}
             </span>
           )}
-          <h3 className="text-[15px] font-medium text-text-primary">
+          <button
+            type="button"
+            onClick={() => setShowDetail((v) => !v)}
+            aria-expanded={showDetail}
+            className="flex items-center gap-1.5 text-left text-[15px] font-medium text-text-primary"
+          >
             {exercise.name}
-          </h3>
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={`text-text-muted transition-transform ${showDetail ? 'rotate-180' : ''}`}
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
           {canSwap && (
             <button
               type="button"
@@ -150,6 +178,25 @@ export default function ExerciseBlock({
           <TargetChip target={target} />
         </p>
       </div>
+
+      {showDetail && (
+        <div
+          className="rounded-lg border border-border-default bg-bg-tertiary px-3 py-2.5"
+          style={{ marginLeft: indented ? 18 : 0 }}
+        >
+          <p className="mb-1 text-[11px] uppercase tracking-widest text-text-muted">
+            {MUSCLE_LABELS[exercise.muscle]}
+            {exercise.secondary?.length
+              ? ` · ${exercise.secondary.map((m) => MUSCLE_LABELS[m]).join(', ')} (half)`
+              : ''}
+          </p>
+          <ZoneBar
+            muscle={exercise.muscle}
+            sets={weekly?.[exercise.muscle] ?? 0}
+            showMuscle={false}
+          />
+        </div>
+      )}
 
       <div className="flex flex-col gap-1.5">
         {sets.map((s) => (
