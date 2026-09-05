@@ -10,13 +10,26 @@ import {
 } from 'recharts'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/lib/data/db'
-import { getAllExercises, MUSCLES, type Muscle } from '@/lib/data/templates'
-import { LANDMARKS, zoneFor, type Zone } from '@/lib/data/volume-landmarks'
+import {
+  getAllExercises,
+  MUSCLES,
+  MUSCLE_GROUPS,
+  MUSCLE_GROUP_LABELS,
+  type Muscle,
+  type MuscleGroup,
+} from '@/lib/data/templates'
+import { zoneFor, type Zone } from '@/lib/data/volume-landmarks'
 import { estimateOneRepMax } from '@/lib/utils/volume'
-import { getWeeklySets, plannedSetsPerCycle } from '@/lib/utils/muscleVolume'
+import {
+  addSets,
+  getWeeklySets,
+  plannedSetsForTemplate,
+  type MuscleSets,
+} from '@/lib/utils/muscleVolume'
+import { getRotationInfo } from '@/lib/utils/rotation'
 import { useSettingsStore } from '@/lib/stores/settingsStore'
 import StatCard from '@/components/progress/StatCard'
-import ZoneBar from '@/components/progress/ZoneBar'
+import MuscleCard from '@/components/progress/MuscleCard'
 import BodyMap from '@/components/progress/BodyMap'
 import Header from '@/components/layout/Header'
 
@@ -42,21 +55,29 @@ export default function Progress() {
   const [currentBest, setCurrentBest] = useState<string>('')
   const [progressPct, setProgressPct] = useState<number>(0)
 
+  // Weekly muscle volume: last 7 days, or projected after the next workout.
+  const [volumeMode, setVolumeMode] = useState<'week' | 'next'>('week')
+  const [group, setGroup] = useState<MuscleGroup | 'all'>('all')
   const weekly = useLiveQuery(() => getWeeklySets(), [])
-  const planned = useMemo(() => plannedSetsPerCycle(), [])
+  const rotation = useLiveQuery(() => getRotationInfo(), [])
+  const projected = useMemo<MuscleSets | undefined>(() => {
+    if (!weekly || !rotation) return undefined
+    return addSets(weekly, plannedSetsForTemplate(rotation.template))
+  }, [weekly, rotation])
+  const volume = volumeMode === 'week' ? weekly : projected
   const zones = useMemo(() => {
     const z = {} as Record<Muscle, Zone>
-    for (const m of MUSCLES) z[m] = zoneFor(m, weekly?.[m] ?? 0)
+    for (const m of MUSCLES) z[m] = zoneFor(m, volume?.[m] ?? 0)
     return z
-  }, [weekly])
-  const rankedMuscles = useMemo(
-    () =>
-      MUSCLES.filter((m) => (weekly?.[m] ?? 0) > 0 || planned[m] > 0).sort(
-        (a, b) =>
-          (weekly?.[b] ?? 0) / LANDMARKS[b].max - (weekly?.[a] ?? 0) / LANDMARKS[a].max
-      ),
-    [weekly, planned]
-  )
+  }, [volume])
+  const shownMuscles = group === 'all' ? MUSCLES : MUSCLE_GROUPS[group]
+  const chips: { id: MuscleGroup | 'all'; label: string }[] = [
+    { id: 'all', label: 'All muscles' },
+    ...(Object.keys(MUSCLE_GROUPS) as MuscleGroup[]).map((g) => ({
+      id: g,
+      label: MUSCLE_GROUP_LABELS[g],
+    })),
+  ]
 
   useEffect(() => {
     if (!selectedExId) return
@@ -151,23 +172,54 @@ export default function Progress() {
           Progress
         </h1>
 
-        {/* This week by muscle */}
+        {/* Weekly volume by muscle */}
         <section className="mb-8">
-          <p className="mb-2 text-[11px] font-medium uppercase tracking-widest text-text-muted">
-            This week by muscle
-          </p>
-          <div className="rounded-xl border border-border-default bg-bg-secondary p-4">
-            <BodyMap zones={zones} />
+          <div className="flex flex-col items-center gap-2.5">
+            <div className="flex gap-0.5 rounded-full bg-bg-input p-[3px]">
+              {(['week', 'next'] as const).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setVolumeMode(m)}
+                  className={`h-[34px] rounded-full px-4 text-[15px] font-medium transition-colors ${
+                    volumeMode === m
+                      ? 'bg-accent-lime/15 text-accent-lime'
+                      : 'text-text-secondary'
+                  }`}
+                >
+                  {m === 'week' ? 'Last 7 days' : 'After next workout'}
+                </button>
+              ))}
+            </div>
+            <p className="text-center text-[13px] text-text-secondary">
+              {volumeMode === 'week'
+                ? 'Number of sets per muscle in the last 7 days'
+                : `Sets per muscle after your next workout${rotation ? ` (${rotation.template.name})` : ''}`}
+            </p>
           </div>
-          <div className="mt-3 space-y-3">
-            {rankedMuscles.map((m) => (
-              <div key={m} className="rounded-xl border border-border-default bg-bg-secondary p-4">
-                <ZoneBar
-                  muscle={m}
-                  sets={weekly?.[m] ?? 0}
-                  caption={`plan ${Number.isInteger(planned[m]) ? planned[m] : planned[m].toFixed(1)} per cycle`}
-                />
-              </div>
+
+          <div className="mt-4 rounded-xl border border-border-default bg-bg-secondary p-4">
+            <BodyMap zones={zones} legend dim={group === 'all' ? null : MUSCLE_GROUPS[group]} />
+          </div>
+
+          <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
+            {chips.map((c) => (
+              <button
+                key={c.id}
+                onClick={() => setGroup(c.id)}
+                className={`h-10 shrink-0 whitespace-nowrap rounded-full px-4 text-[15px] font-medium transition-colors ${
+                  group === c.id
+                    ? 'bg-accent-lime/15 text-accent-lime'
+                    : 'bg-bg-input text-text-secondary'
+                }`}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-2 space-y-3">
+            {shownMuscles.map((m) => (
+              <MuscleCard key={m} muscle={m} sets={volume?.[m] ?? 0} />
             ))}
           </div>
         </section>

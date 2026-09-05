@@ -34,6 +34,26 @@ export const MUSCLE_LABELS: Record<Muscle, string> = {
   core: 'Core',
 }
 
+export type MuscleGroup = 'chest' | 'shoulders' | 'arms' | 'back' | 'legs' | 'core'
+
+export const MUSCLE_GROUPS: Record<MuscleGroup, Muscle[]> = {
+  chest: ['chest'],
+  shoulders: ['front_delt', 'side_delt', 'rear_delt'],
+  arms: ['biceps', 'triceps'],
+  back: ['lats', 'upper_back'],
+  legs: ['quads', 'hamstrings', 'glutes', 'calves'],
+  core: ['core'],
+}
+
+export const MUSCLE_GROUP_LABELS: Record<MuscleGroup, string> = {
+  chest: 'Chest',
+  shoulders: 'Shoulders',
+  arms: 'Arms',
+  back: 'Back',
+  legs: 'Legs',
+  core: 'Core',
+}
+
 export interface ExerciseTemplate {
   id: string
   name: string

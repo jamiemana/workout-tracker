@@ -8,7 +8,7 @@ import { computeTarget } from '@/lib/utils/progression'
 import { getWeeklySets } from '@/lib/utils/muscleVolume'
 import SetRow from './SetRow'
 import TargetChip from './TargetChip'
-import ZoneBar from '@/components/progress/ZoneBar'
+import MuscleCard from '@/components/progress/MuscleCard'
 
 interface ExerciseBlockProps {
   exercise: ExerciseTemplate
@@ -180,22 +180,16 @@ export default function ExerciseBlock({
       </div>
 
       {showDetail && (
-        <div
-          className="rounded-lg border border-border-default bg-bg-tertiary px-3 py-2.5"
-          style={{ marginLeft: indented ? 18 : 0 }}
-        >
-          <p className="mb-1 text-[11px] uppercase tracking-widest text-text-muted">
-            {MUSCLE_LABELS[exercise.muscle]}
-            {exercise.secondary?.length
-              ? ` · ${exercise.secondary.map((m) => MUSCLE_LABELS[m]).join(', ')} (half)`
-              : ''}
-          </p>
-          <ZoneBar
-            muscle={exercise.muscle}
-            sets={weekly?.[exercise.muscle] ?? 0}
-            showMuscle={false}
-          />
-        </div>
+        <MuscleCard
+          muscle={exercise.muscle}
+          sets={weekly?.[exercise.muscle] ?? 0}
+          note={
+            exercise.secondary?.length
+              ? `Also ${exercise.secondary.map((m) => MUSCLE_LABELS[m].toLowerCase()).join(', ')} (half)`
+              : undefined
+          }
+          className={indented ? 'ml-[18px]' : ''}
+        />
       )}
 
       <div className="flex flex-col gap-1.5">

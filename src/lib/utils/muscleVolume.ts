@@ -5,6 +5,7 @@ import {
   workoutTemplates,
   type ExerciseTemplate,
   type Muscle,
+  type WorkoutTemplate,
 } from '../data/templates'
 
 export type MuscleSets = Record<Muscle, number>
@@ -46,6 +47,13 @@ export async function getWeeklySets(now: Date = new Date()): Promise<MuscleSets>
   return acc
 }
 
+/** Planned sets per muscle for one workout. */
+export function plannedSetsForTemplate(t: WorkoutTemplate): MuscleSets {
+  const acc = emptySets()
+  for (const ex of t.exercises) addExercise(acc, ex, ex.targetSets)
+  return acc
+}
+
 /** Planned sets per muscle across one full pass of the four workouts. */
 export function plannedSetsPerCycle(): MuscleSets {
   const acc = emptySets()
@@ -53,6 +61,12 @@ export function plannedSetsPerCycle(): MuscleSets {
     for (const ex of t.exercises) addExercise(acc, ex, ex.targetSets)
   }
   return acc
+}
+
+export function addSets(a: MuscleSets, b: MuscleSets): MuscleSets {
+  const out = emptySets()
+  for (const m of MUSCLES) out[m] = a[m] + b[m]
+  return out
 }
 
 export function roundSets(n: number): number {

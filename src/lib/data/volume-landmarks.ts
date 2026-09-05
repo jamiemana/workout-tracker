@@ -55,7 +55,13 @@ export function zoneFor(muscle: Muscle, sets: number): Zone {
   return 'maintaining'
 }
 
-/** Zone of the nth segment (1-based) in a bar of `max` segments. */
-export function zoneForSegment(muscle: Muscle, n: number): Zone {
-  return zoneFor(muscle, n)
+/** Right-hand caption on a muscle card: distance to growth, or the zone name. */
+export function hintFor(muscle: Muscle, sets: number): { text: string; color: string } {
+  const l = LANDMARKS[muscle]
+  const zone = zoneFor(muscle, sets)
+  if (zone === 'over') return { text: ZONE_LABELS.over, color: ZONE_COLORS.over }
+  if (zone === 'focus') return { text: ZONE_LABELS.focus, color: ZONE_COLORS.focus }
+  if (zone === 'growth') return { text: ZONE_LABELS.growth, color: ZONE_COLORS.growth }
+  const n = Math.ceil(l.growth - sets)
+  return { text: `${n} ${n === 1 ? 'set' : 'sets'} to grow`, color: '#888888' }
 }
