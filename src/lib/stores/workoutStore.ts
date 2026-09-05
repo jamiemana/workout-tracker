@@ -57,7 +57,8 @@ async function buildSetInputs(
     const prevForEx = previousSets.filter((p) => p.exerciseId === ex.id)
     const unit = settings.exerciseUnits[ex.id] ?? 'kg'
     const declined =
-      previous.date !== null && settings.declinedIncrease[ex.id] === previous.date
+      previous.sessionId !== null &&
+      settings.declinedIncrease[ex.id] === previous.sessionId
     const target = computeTarget(ex, prevForEx, unit, declined)
     if (target) targets[ex.id] = target
 
@@ -306,8 +307,8 @@ export const useWorkoutStore = create<WorkoutState>()((set, get) => ({
 }))
 
 interface PreviousSets {
-  /** Date of the previous completed session of this template, or null. */
-  date: string | null
+  /** Id of the previous completed session of this template, or null. */
+  sessionId: number | null
   sets: { exerciseId: string; setNumber: number; weight: number | null; reps: number }[]
 }
 
@@ -322,10 +323,10 @@ async function loadPreviousWeights(
     .reverse()
     .sortBy('date')
 
-  if (!previousSession.length) return { date: null, sets: [] }
+  if (!previousSession.length) return { sessionId: null, sets: [] }
 
   const lastSession = previousSession[0]
-  if (!lastSession.id) return { date: null, sets: [] }
+  if (!lastSession.id) return { sessionId: null, sets: [] }
 
   const sets = await db.loggedSets
     .where('sessionId')
@@ -333,7 +334,7 @@ async function loadPreviousWeights(
     .toArray()
 
   return {
-    date: lastSession.date,
+    sessionId: lastSession.id,
     sets: sets
       .filter((s) => exercises.some((e) => e.id === s.exerciseId))
       .map((s) => ({

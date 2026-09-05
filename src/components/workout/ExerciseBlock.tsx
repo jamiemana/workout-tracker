@@ -86,7 +86,7 @@ export default function ExerciseBlock({
     )
   }, [allCompleted, sets, exercise, exerciseUnit])
   const increaseAccepted =
-    !!activeSession && declinedOn !== activeSession.date
+    !!activeSession?.id && declinedOn !== activeSession.id
 
   const handleToggleComplete = async (setNumber: number) => {
     const setInput = sets.find((s) => s.setNumber === setNumber)
@@ -117,8 +117,8 @@ export default function ExerciseBlock({
   }
 
   const handleToggleIncrease = () => {
-    if (!activeSession) return
-    setDeclinedIncrease(exercise.id, increaseAccepted ? activeSession.date : null)
+    if (!activeSession?.id) return
+    setDeclinedIncrease(exercise.id, increaseAccepted ? activeSession.id : null)
   }
 
   return (

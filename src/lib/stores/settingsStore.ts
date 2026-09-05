@@ -7,14 +7,14 @@ interface SettingsState {
   startDate: string | null
   unit: 'kg'
   exerciseUnits: Record<string, WeightUnit>
-  /** exerciseId -> session date on which "added next time" was switched off. */
-  declinedIncrease: Record<string, string>
+  /** exerciseId -> id of the session in which "added next time" was switched off. */
+  declinedIncrease: Record<string, number>
   restTimerDefault: number
   autoBackup: boolean
   onboarded: boolean
   setStartDate: (date: string) => void
   setExerciseUnit: (exerciseId: string, unit: WeightUnit) => void
-  setDeclinedIncrease: (exerciseId: string, date: string | null) => void
+  setDeclinedIncrease: (exerciseId: string, sessionId: number | null) => void
   setRestTimerDefault: (seconds: number) => void
   setAutoBackup: (enabled: boolean) => void
   setOnboarded: (val: boolean) => void
@@ -35,11 +35,11 @@ export const useSettingsStore = create<SettingsState>()(
         set((state) => ({
           exerciseUnits: { ...state.exerciseUnits, [exerciseId]: unit },
         })),
-      setDeclinedIncrease: (exerciseId, date) =>
+      setDeclinedIncrease: (exerciseId, sessionId) =>
         set((state) => {
           const next = { ...state.declinedIncrease }
-          if (date === null) delete next[exerciseId]
-          else next[exerciseId] = date
+          if (sessionId === null) delete next[exerciseId]
+          else next[exerciseId] = sessionId
           return { declinedIncrease: next }
         }),
       setRestTimerDefault: (seconds) => set({ restTimerDefault: seconds }),
