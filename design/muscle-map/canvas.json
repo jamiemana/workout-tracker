@@ -22,53 +22,78 @@
       "file": "Body.dc.html",
       "title": "Figure component",
       "x": 480,
-      "y": 360,
-      "w": 400,
+      "y": 1240,
+      "w": 480,
       "h": 520
     },
     {
       "file": "FigureA.dc.html",
       "title": "Option A \u00b7 Outlined anatomy",
       "x": 480,
-      "y": 1020,
+      "y": 0,
       "w": 390,
-      "h": 640
+      "h": 640,
+      "page": "page-2"
     },
     {
       "file": "FigureB.dc.html",
       "title": "Option B \u00b7 Soft solid",
       "x": 950,
-      "y": 1020,
+      "y": 0,
       "w": 390,
-      "h": 640
+      "h": 640,
+      "page": "page-2"
     },
     {
       "file": "FigureC.dc.html",
       "title": "Option C \u00b7 Line art",
       "x": 1420,
-      "y": 1020,
+      "y": 0,
       "w": 390,
-      "h": 640
+      "h": 640,
+      "page": "page-2"
     },
     {
       "file": "FigureD.dc.html",
       "title": "Option D \u00b7 Flat separated",
       "x": 1890,
-      "y": 1020,
+      "y": 0,
       "w": 390,
-      "h": 640
+      "h": 640,
+      "page": "page-2"
+    },
+    {
+      "file": "Figure.dc.html",
+      "title": "Figure",
+      "x": 480,
+      "y": 360,
+      "w": 390,
+      "h": 760,
+      "is_interactive": false
     }
   ],
   "launch": {
-    "view": "canvas"
+    "view": "canvas",
+    "page": "page-1"
   },
   "annotations": [
     {
       "id": "figure-options",
       "x": 480,
-      "y": 920,
+      "y": -120,
       "w": 420,
-      "text": "Figure directions to pick from. Same anatomy underneath, four rendering styles. Sample data: chest, arms and lats in the growth zone, delts maintaining, traps and core in focus."
+      "text": "Figure directions to pick from. Same anatomy underneath, four rendering styles. Sample data: chest, arms and lats in the growth zone, delts maintaining, traps and core in focus.",
+      "page": "page-2"
+    }
+  ],
+  "pages": [
+    {
+      "id": "page-1",
+      "name": "Muscle volume"
+    },
+    {
+      "id": "page-2",
+      "name": "Earlier directions"
     }
   ]
 }
