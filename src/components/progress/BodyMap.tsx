@@ -1,6 +1,7 @@
+import { useId } from 'react'
 import type { Muscle } from '@/lib/data/templates'
 import { ZONE_COLORS, ZONE_LABELS, type Zone } from '@/lib/data/volume-landmarks'
-import { BODY_PATHS } from './bodyPaths'
+import { BODY_GEOM } from './bodyPaths'
 
 export type BodyView =
   | 'both'
@@ -28,22 +29,10 @@ export const MUSCLE_VIEW: Record<Muscle, BodyView> = {
   calves: 'back-legs',
 }
 
-const VIEWBOX: Record<BodyView, string> = {
-  both: '0 0 400 520',
-  front: '0 0 200 520',
-  back: '0 0 200 520',
-  'front-torso': '20 70 160 200',
-  'back-torso': '20 70 160 200',
-  'front-legs': '20 250 160 270',
-  'back-legs': '20 250 160 270',
-}
-
-// The full figure sits on the page background; crops sit on a card, so they
-// get a lighter body to stay legible.
-const TONES = {
-  full: { body: '#161616', none: '#1e1e1e', line: '#2a2a2a' },
-  crop: { body: '#262626', none: '#333333', line: '#404040' },
-}
+// Body (the gaps and untouched areas) is lighter than the muscles, as in the
+// reference illustration; trained muscles take their zone colour.
+const BODY = '#3a3a3a'
+const NONE = '#232323'
 const SELECT = '#adff02'
 
 interface BodyMapProps {
@@ -57,6 +46,8 @@ interface BodyMapProps {
   className?: string
 }
 
+type Side = 'front' | 'back'
+
 function Figure({
   side,
   cx,
@@ -64,61 +55,73 @@ function Figure({
   selected,
   onSelect,
   dim,
-  tone,
+  uid,
 }: {
-  side: 'front' | 'back'
+  side: Side
   cx: number
   zones: Partial<Record<Muscle, Zone>>
   selected?: Muscle | null
   onSelect?: (m: Muscle) => void
   dim?: Muscle[] | null
-  tone: (typeof TONES)['full']
+  uid: string
 }) {
-  const regions = BODY_PATHS[side] as Record<string, readonly string[]>
+  const g = BODY_GEOM[side]
+  const regions = g.regions as Record<string, readonly string[]>
   const dimming = !!dim && dim.length > 0
+  const gap = BODY_GEOM.gap
+
+  const muscleProps = (muscle: Muscle) => ({
+    'data-muscle': muscle,
+    stroke: selected === muscle ? SELECT : BODY,
+    strokeWidth: gap,
+    strokeLinejoin: 'round' as const,
+    style: {
+      opacity: dimming && !dim!.includes(muscle) ? 0.25 : 1,
+      transition: 'opacity 160ms ease',
+      cursor: onSelect ? 'pointer' : undefined,
+    },
+    onClick: onSelect ? () => onSelect(muscle) : undefined,
+  })
+  const fillFor = (muscle: Muscle) => {
+    const zone = zones[muscle]
+    return zone && zone !== 'none' ? ZONE_COLORS[zone] : NONE
+  }
+
   return (
     <g transform={`translate(${cx},0)`}>
-      <path d={BODY_PATHS.head} fill={tone.body} />
-      <path d={BODY_PATHS.neck} fill={tone.body} />
-      {BODY_PATHS.silhouette.map((d, i) => (
-        <path key={`s${i}`} d={d} fill={tone.body} />
+      {g.silhouette.map((d, i) => (
+        <path key={`s${i}`} d={d} fill={BODY} />
       ))}
-      {side === 'back' &&
-        BODY_PATHS.erectors.map((d, i) => <path key={`e${i}`} d={d} fill={tone.none} />)}
-      {BODY_PATHS.detail[side].map((d, i) => (
-        <path key={`d${i}`} d={d} fill="none" stroke={tone.line} strokeWidth={1} />
+      {g.detail.map((d, i) => (
+        <path key={`d${i}`} d={d} fill={NONE} stroke={BODY} strokeWidth={gap} strokeLinejoin="round" />
       ))}
-      {Object.entries(regions).map(([m, paths]) => {
+      {BODY_GEOM.order.map((m) => {
+        const paths = regions[m]
+        if (!paths) return null
         const muscle = m as Muscle
-        const zone = zones[muscle]
-        const fill = zone && zone !== 'none' ? ZONE_COLORS[zone] : tone.none
-        const isSelected = selected === muscle
-        const dimmed = dimming && !dim!.includes(muscle)
         return paths.map((d, i) => (
-          <path
-            key={`${m}${i}`}
-            d={d}
-            data-muscle={m}
-            fill={fill}
-            stroke={isSelected ? SELECT : tone.line}
-            strokeWidth={isSelected ? 2 : 1}
-            strokeLinejoin="round"
-            style={{
-              opacity: dimmed ? 0.25 : 1,
-              transition: 'opacity 160ms ease',
-              cursor: onSelect ? 'pointer' : undefined,
-            }}
-            onClick={onSelect ? () => onSelect(muscle) : undefined}
-          />
+          <path key={`${m}${i}`} d={d} fill={fillFor(muscle)} {...muscleProps(muscle)} />
         ))
+      })}
+      {g.sideDelt.map((sd, i) => {
+        const id = `sd-${uid}-${side}-${i}`
+        const [x, y, w, h] = sd.rect
+        return (
+          <g key={id}>
+            <clipPath id={id}>
+              <rect x={x} y={y} width={w} height={h} />
+            </clipPath>
+            <path d={sd.d} clipPath={`url(#${id})`} fill={fillFor('side_delt')} {...muscleProps('side_delt')} />
+          </g>
+        )
       })}
     </g>
   )
 }
 
 /**
- * Stylised front/back figure with each muscle painted by its zone. Geometry
- * comes from design/muscle-map/build.py via bodyPaths.ts.
+ * Front/back figure with each muscle painted by its zone. Geometry comes from
+ * the reference illustration via design/muscle-map/trace_import.py.
  */
 export default function BodyMap({
   zones,
@@ -129,24 +132,23 @@ export default function BodyMap({
   legend = false,
   className,
 }: BodyMapProps) {
-  const tone = view.includes('-') ? TONES.crop : TONES.full
-  const common = { zones, selected, onSelect, dim, tone }
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, '')
+  const common = { zones, selected, onSelect, dim, uid }
   return (
     <div className={className}>
       <svg
-        viewBox={VIEWBOX[view]}
+        viewBox={BODY_GEOM.viewbox[view]}
         className="block h-auto w-full"
         role="img"
         aria-label="Muscle map"
       >
-        {view === 'both' && (
+        {view === 'both' ? (
           <>
-            <Figure side="front" cx={100} {...common} />
-            <Figure side="back" cx={300} {...common} />
+            <Figure side="front" cx={120} {...common} />
+            <Figure side="back" cx={360} {...common} />
           </>
-        )}
-        {view !== 'both' && (
-          <Figure side={view.startsWith('front') ? 'front' : 'back'} cx={100} {...common} />
+        ) : (
+          <Figure side={view.startsWith('front') ? 'front' : 'back'} cx={120} {...common} />
         )}
       </svg>
       {legend && (
