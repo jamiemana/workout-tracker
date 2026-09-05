@@ -107,8 +107,9 @@ export default function Today() {
     timer.stop()
     setTimerActive(false)
 
+    // Stay inside the Finish tap's user activation so the share sheet can open.
     if (autoBackup && session) {
-      setTimeout(() => triggerAutoBackup(), 500)
+      await triggerAutoBackup()
     }
   }
 
@@ -143,6 +144,13 @@ export default function Today() {
           <p className="text-sm text-text-tertiary mb-6">
             Next up: <span className="text-text-secondary">{todayInfo.template.name}</span>
           </p>
+
+          <button
+            onClick={() => triggerAutoBackup()}
+            className="mb-3 rounded-lg bg-bg-input px-5 py-2.5 text-sm font-medium text-text-secondary"
+          >
+            Save backup
+          </button>
 
           {/* Switch workout button */}
           <button

@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSettingsStore } from '@/lib/stores/settingsStore'
-import { exportAllData, downloadJSON, importData } from '@/lib/utils/backup'
+import { exportAllData, shareOrDownloadJSON, importData } from '@/lib/utils/backup'
 import { db } from '@/lib/data/db'
 
 export default function Settings() {
@@ -20,7 +20,7 @@ export default function Settings() {
 
   const handleExport = async () => {
     const data = await exportAllData()
-    downloadJSON(data)
+    await shareOrDownloadJSON(data)
   }
 
   const handleImportClick = () => {
@@ -97,7 +97,7 @@ export default function Settings() {
           <div>
             <p className="text-sm font-medium text-text-primary">Auto-backup</p>
             <p className="text-xs text-text-tertiary">
-              Download JSON after each workout
+              Save a JSON backup after each workout
             </p>
           </div>
           <button
