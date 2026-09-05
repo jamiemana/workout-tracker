@@ -1,0 +1,143 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin: 0; background: #0a0a0a; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #adff02; } a:hover { color: #adff02; }
+    .mono { font-family: 'SF Mono', Menlo, monospace; }
+    .chips::-webkit-scrollbar { display: none; }
+    button { font: inherit; border: 0; cursor: pointer; }
+  </style>
+</helmet>
+<div style="width: 390px; min-height: 844px; background: #0a0a0a; display: flex; flex-direction: column; padding-bottom: 24px; box-sizing: border-box;">
+
+  <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px 16px 16px;">
+    <div style="display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: #1e1e1e;">
+      <button onClick="{{ setWeek }}" style="height: 34px; padding: 0 16px; border-radius: 999px; font-size: 15px; font-weight: 500; background: {{ weekBg }}; color: {{ weekFg }};">Last 7 days</button>
+      <button onClick="{{ setNext }}" style="height: 34px; padding: 0 16px; border-radius: 999px; font-size: 15px; font-weight: 500; background: {{ nextBg }}; color: {{ nextFg }};">After next workout</button>
+    </div>
+    <p style="margin: 0; font-size: 13px; color: #888888; text-align: center;">{{ subtitle }}</p>
+  </div>
+
+  <div style="flex: 1; display: flex; flex-direction: column; gap: 12px; padding: 12px 12px 0; border-radius: 24px 24px 0 0; background: #111111; border-top: 1px solid #1a1a1a;">
+    <div style="display: flex; justify-content: center;">
+      <span style="width: 36px; height: 4px; border-radius: 2px; background: #2a2a2a;"></span>
+    </div>
+
+    <div class="chips" style="display: flex; gap: 8px; overflow-x: auto; padding: 4px 4px 8px;">
+      <sc-for list="{{ chips }}" as="chip" hint-placeholder-count="4">
+        <button onClick="{{ chip.pick }}" style="flex: 0 0 auto; height: 40px; padding: 0 16px; border-radius: 999px; font-size: 15px; font-weight: 500; white-space: nowrap; background: {{ chip.bg }}; color: {{ chip.fg }};">{{ chip.label }}</button>
+      </sc-for>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <sc-for list="{{ cards }}" as="card" hint-placeholder-count="4">
+        <div style="display: flex; flex-direction: column; gap: 4px; padding: 16px; border-radius: 16px; background: #141414; border: 1px solid #1a1a1a;">
+          <p style="margin: 0; font-size: 17px; font-weight: 600; color: #ffffff;">{{ card.label }}</p>
+          <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px;">
+            <p style="margin: 0; font-size: 15px; color: #888888;"><span class="mono" style="font-size: 17px; font-weight: 600; color: #ffffff;">{{ card.sets }}</span> of {{ card.max }} weekly sets</p>
+            <p style="margin: 0; font-size: 15px; font-weight: 500; color: {{ card.hintColor }};">{{ card.hint }}</p>
+          </div>
+          <div style="display: flex; align-items: center; gap: 14px; margin-top: 10px;">
+            <div style="flex: 0 0 64px; width: 64px;">
+              <dc-import name="Body" view="{{ card.view }}" zones="{{ card.zones }}" hint-size="64px,80px"></dc-import>
+            </div>
+            <div style="flex: 1; display: flex; gap: 4px; height: 36px;">
+              <sc-for list="{{ card.segments }}" as="seg" hint-placeholder-count="16">
+                <span style="flex: 1; border-radius: 6px; background: {{ seg.color }}; opacity: {{ seg.opacity }};"></span>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script data-dc-script data-props='{"mode":{"editor":"enum","default":"week","options":["week","next"],"section":"Data"},"filter":{"editor":"enum","default":"all","options":["all","chest","shoulders","arms","back","legs","core"],"section":"Data"},"$preview":{"width":390,"height":2450}}'>
+const MUSCLES = ['chest','front_delt','side_delt','rear_delt','triceps','biceps','lats','upper_back','quads','hamstrings','glutes','calves','core'];
+const LABELS = { chest:'Chest', front_delt:'Front delts', side_delt:'Side delts', rear_delt:'Rear delts', triceps:'Triceps', biceps:'Biceps', lats:'Lats', upper_back:'Upper back', quads:'Quads', hamstrings:'Hamstrings', glutes:'Glutes', calves:'Calves', core:'Core' };
+const LANDMARKS = {
+  chest:{growth:6,focus:12,max:16}, front_delt:{growth:4,focus:8,max:12}, side_delt:{growth:8,focus:14,max:20}, rear_delt:{growth:6,focus:12,max:18},
+  triceps:{growth:6,focus:10,max:14}, biceps:{growth:6,focus:10,max:14}, lats:{growth:8,focus:12,max:18}, upper_back:{growth:8,focus:12,max:18},
+  quads:{growth:8,focus:12,max:16}, hamstrings:{growth:6,focus:10,max:14}, glutes:{growth:4,focus:8,max:12}, calves:{growth:6,focus:10,max:16}, core:{growth:6,focus:10,max:16},
+};
+const ZONE_COLORS = { none:'#1e1e1e', maintaining:'#3B82F6', growth:'#ADFF02', focus:'#EAB308', over:'#FC7753' };
+const VIEW = { chest:'front-torso', front_delt:'front-torso', side_delt:'front-torso', biceps:'front-torso', core:'front-torso',
+  rear_delt:'back-torso', triceps:'back-torso', lats:'back-torso', upper_back:'back-torso',
+  quads:'front-legs', hamstrings:'back-legs', glutes:'back-legs', calves:'back-legs' };
+const GROUPS = { all: MUSCLES, chest:['chest'], shoulders:['front_delt','side_delt','rear_delt'], arms:['biceps','triceps'], back:['lats','upper_back'], legs:['quads','hamstrings','glutes','calves'], core:['core'] };
+const CHIP_LABELS = { all:'All muscles', chest:'Chest', shoulders:'Shoulders', arms:'Arms', back:'Back', legs:'Legs', core:'Core' };
+// Sample data: completed sets in the last 7 days, and the planned sets of the next workout (Push A).
+const WEEK = { chest:8, front_delt:3, side_delt:4, rear_delt:2, triceps:12, biceps:13, lats:9, upper_back:6, quads:6, hamstrings:4, glutes:2, calves:0, core:5 };
+const NEXT = { chest:7.5, front_delt:6, side_delt:4.5, rear_delt:0, triceps:6.5, biceps:0, lats:0, upper_back:0, quads:6, hamstrings:0, glutes:1.5, calves:0, core:0 };
+function zoneFor(m, sets) {
+  const l = LANDMARKS[m];
+  if (sets < 0.5) return 'none';
+  if (sets > l.max) return 'over';
+  if (sets >= l.focus) return 'focus';
+  if (sets >= l.growth) return 'growth';
+  return 'maintaining';
+}
+function hintFor(m, sets) {
+  const l = LANDMARKS[m], z = zoneFor(m, sets);
+  if (z === 'over') return { text: 'Over max', color: ZONE_COLORS.over };
+  if (z === 'focus') return { text: 'Focus zone', color: ZONE_COLORS.focus };
+  if (z === 'growth') return { text: 'Growth zone', color: ZONE_COLORS.growth };
+  const n = Math.ceil(l.growth - sets);
+  return { text: n + (n === 1 ? ' set to grow' : ' sets to grow'), color: '#888888' };
+}
+function fmt(n) { return Number.isInteger(n) ? String(n) : n.toFixed(1); }
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { mode: props.mode || 'week', filter: props.filter || 'all' };
+    this.setWeek = () => this.setState({ mode: 'week' });
+    this.setNext = () => this.setState({ mode: 'next' });
+  }
+  componentDidUpdate(prev) {
+    if (prev.mode !== this.props.mode && this.props.mode) this.setState({ mode: this.props.mode });
+    if (prev.filter !== this.props.filter && this.props.filter) this.setState({ filter: this.props.filter });
+  }
+  renderVals() {
+    const { mode, filter } = this.state;
+    const on = { bg: 'rgba(173,255,2,0.15)', fg: '#adff02' }, off = { bg: 'transparent', fg: '#888888' };
+    const chipOff = { bg: '#1e1e1e', fg: '#888888' };
+    const sets = (m) => mode === 'week' ? WEEK[m] : WEEK[m] + NEXT[m];
+    const chips = Object.keys(GROUPS).map((g) => ({
+      label: CHIP_LABELS[g],
+      bg: filter === g ? on.bg : chipOff.bg,
+      fg: filter === g ? on.fg : chipOff.fg,
+      pick: () => this.setState({ filter: g }),
+    }));
+    const cards = GROUPS[filter].map((m) => {
+      const s = sets(m), l = LANDMARKS[m], zone = zoneFor(m, s), hint = hintFor(m, s);
+      const filled = Math.round(s * 2) / 2;
+      const n = Math.max(l.max, Math.ceil(filled));
+      const segments = [];
+      for (let i = 1; i <= n; i++) {
+        const z = i > l.max ? 'over' : zoneFor(m, i);
+        segments.push({ color: ZONE_COLORS[z], opacity: i <= filled ? 1 : 0.22 });
+      }
+      const zones = {}; zones[m] = zone === 'none' ? 'maintaining' : zone;
+      return { label: LABELS[m], sets: fmt(s), max: l.max, hint: hint.text, hintColor: hint.color,
+        view: VIEW[m], zones, segments };
+    });
+    return {
+      chips, cards,
+      subtitle: mode === 'week' ? 'Number of sets per muscle in the last 7 days' : 'Sets per muscle after your next workout (Push A)',
+      weekBg: mode === 'week' ? on.bg : off.bg, weekFg: mode === 'week' ? on.fg : off.fg,
+      nextBg: mode === 'next' ? on.bg : off.bg, nextFg: mode === 'next' ? on.fg : off.fg,
+      setWeek: this.setWeek, setNext: this.setNext,
+    };
+  }
+}
+</script>
+</body>
+</html>

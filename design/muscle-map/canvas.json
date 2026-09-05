@@ -1,0 +1,8 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "title": "Progress · by muscle", "x": 0, "y": 0, "w": 390, "h": 2450, "is_interactive": true },
+    { "file": "Row.dc.html", "title": "Under an exercise (Today)", "x": 480, "y": 0, "w": 390, "h": 300, "is_interactive": true },
+    { "file": "Body.dc.html", "title": "Figure component", "x": 480, "y": 360, "w": 400, "h": 520 }
+  ],
+  "launch": { "view": "canvas" }
+}
