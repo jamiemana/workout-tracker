@@ -34,7 +34,7 @@ export default function MuscleCard({ muscle, sets, note, className = '' }: Muscl
       <p className="text-[17px] font-semibold text-text-primary">{MUSCLE_LABELS[muscle]}</p>
       <div className="mt-1 flex items-baseline justify-between gap-3">
         <p className="text-[15px] text-text-secondary">
-          <span className="font-mono text-[17px] font-semibold text-text-primary">{fmt(sets)}</span> of{' '}
+          <span className="text-[17px] font-semibold text-text-primary">{fmt(sets)}</span> of{' '}
           {max} weekly sets
         </p>
         <p className="text-[15px] font-medium" style={{ color: hint.color }}>
