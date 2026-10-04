@@ -58,6 +58,7 @@ export function computeTarget(
   unit: WeightUnit,
   declined = false
 ): ProgressionTarget | null {
+  if (ex.warmup) return null
   if (prev.length === 0) return null
   const { min, max } = parseRepRange(ex.targetReps)
 

@@ -100,6 +100,11 @@ export default function ExerciseBlock({
     const logged = await completeSet(exercise.id, setNumber)
     if (!logged || logged.id === undefined) return
 
+    if (exercise.warmup) {
+      onSetCompleted()
+      return
+    }
+
     const result = await checkAndRecordPR(
       exercise.id,
       logged.weight,
@@ -130,6 +135,14 @@ export default function ExerciseBlock({
               {label}
             </span>
           )}
+          {exercise.warmup ? (
+            <>
+              <span className="rounded-sm bg-bg-input px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-widest text-text-tertiary">
+                Warm-up
+              </span>
+              <h3 className="text-[15px] font-medium text-text-primary">{exercise.name}</h3>
+            </>
+          ) : (
           <button
             type="button"
             onClick={() => setShowDetail((v) => !v)}
@@ -151,6 +164,7 @@ export default function ExerciseBlock({
               <polyline points="6 9 12 15 18 9" />
             </svg>
           </button>
+          )}
           {canSwap && (
             <button
               type="button"

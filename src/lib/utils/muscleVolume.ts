@@ -17,6 +17,7 @@ function emptySets(): MuscleSets {
 }
 
 function addExercise(acc: MuscleSets, ex: ExerciseTemplate, sets: number) {
+  if (ex.warmup) return
   acc[ex.muscle] += sets
   for (const m of ex.secondary ?? []) acc[m] += sets * SECONDARY_WEIGHT
 }
