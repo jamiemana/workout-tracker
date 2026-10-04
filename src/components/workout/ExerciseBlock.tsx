@@ -186,7 +186,8 @@ export default function ExerciseBlock({
         >
           <span>
             {exercise.targetSets}
-            {exercise.targetSetsMax ? `-${exercise.targetSetsMax}` : ''} sets &middot;{' '}
+            {exercise.targetSetsMax ? `-${exercise.targetSetsMax}` : ''}{' '}
+            {exercise.targetSets === 1 && !exercise.targetSetsMax ? 'set' : 'sets'} &middot;{' '}
             {exercise.targetReps} reps
           </span>
           <TargetChip target={target} />
