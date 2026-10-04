@@ -10,6 +10,8 @@ export interface WorkoutSession {
   notes: string | null
   // templateExerciseId -> currentExerciseId. Missing or equal = no swap.
   exerciseSwaps?: Record<string, string>
+  /** Started during a deload week: lighter targets, excluded from progression. */
+  deload?: boolean
 }
 
 export interface LoggedSet {

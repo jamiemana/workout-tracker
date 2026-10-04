@@ -215,6 +215,11 @@ export default function Today() {
               Cycle {todayInfo.cycleNumber} &middot;{' '}
               {formatDate(new Date())}
             </p>
+            {activeSession?.deload && (
+              <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-accent-coral/15 px-2.5 py-1 text-[11px] font-medium text-accent-coral">
+                Deload &middot; lighter targets
+              </span>
+            )}
           </div>
           <button
             onClick={() => setShowSwitcher(!showSwitcher)}

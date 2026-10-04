@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useSettingsStore } from '@/lib/stores/settingsStore'
+import { useSettingsStore, isDeloadActive, deloadEndsOn } from '@/lib/stores/settingsStore'
 import { exportAllData, shareOrDownloadJSON, importData } from '@/lib/utils/backup'
+import { formatDate } from '@/lib/utils/rotation'
 import { db } from '@/lib/data/db'
 
 export default function Settings() {
@@ -9,10 +10,14 @@ export default function Settings() {
   const {
     restTimerDefault,
     autoBackup,
+    deloadStartedAt,
     setRestTimerDefault,
     setAutoBackup,
     setOnboarded,
+    startDeload,
+    endDeload,
   } = useSettingsStore()
+  const deloadActive = isDeloadActive(deloadStartedAt)
 
   const [resetStep, setResetStep] = useState(0)
   const [importStatus, setImportStatus] = useState<string | null>(null)
@@ -90,6 +95,40 @@ export default function Settings() {
             onChange={(e) => setRestTimerDefault(parseInt(e.target.value) || 120)}
             className="w-full rounded-lg border border-border-subtle bg-bg-input px-4 py-3 font-mono text-sm text-text-primary"
           />
+        </div>
+
+        {/* Deload week */}
+        <div className="rounded-xl border border-border-default bg-bg-secondary px-4 py-3">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium text-text-primary">Deload week</p>
+              <p className="mt-1 text-xs leading-relaxed text-text-tertiary">
+                Lighter week on demand: 90% of last session&apos;s weight, one set fewer per
+                exercise, reps at the bottom of the range. Lasts 7 days. The week after picks up
+                from your last normal session.
+              </p>
+            </div>
+          </div>
+          {deloadActive && deloadStartedAt ? (
+            <div className="mt-3 flex items-center justify-between">
+              <p className="text-xs text-accent-coral">
+                Active &middot; ends {formatDate(deloadEndsOn(deloadStartedAt))}
+              </p>
+              <button
+                onClick={endDeload}
+                className="rounded-md bg-bg-input px-3 py-1.5 text-xs font-medium text-text-secondary"
+              >
+                End now
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={startDeload}
+              className="mt-3 w-full rounded-lg bg-accent-coral/15 py-2.5 text-sm font-medium text-accent-coral"
+            >
+              Start deload
+            </button>
+          )}
         </div>
 
         {/* Auto-backup */}

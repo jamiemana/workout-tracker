@@ -9,6 +9,9 @@ export default function TargetChip({ target }: { target: ProgressionTarget | und
   if (target.kind === 'increase' && target.weight !== null && target.unit !== 'bw') {
     text = `↑ ${formatLoad(target.weight, target.unit)}`
     tone = 'bg-accent-lime/15 text-accent-lime'
+  } else if (target.kind === 'deload' && target.weight !== null && target.unit !== 'bw') {
+    text = `↓ ${formatLoad(target.weight, target.unit)}`
+    tone = 'bg-accent-coral/15 text-accent-coral'
   } else if (target.kind === 'hold' && target.weight !== null && target.unit !== 'bw') {
     text = `${formatLoad(target.weight, target.unit)} × ${target.reps}`
     tone = 'bg-accent-cyan/15 text-accent-cyan'

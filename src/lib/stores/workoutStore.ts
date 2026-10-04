@@ -6,7 +6,7 @@ import {
   getTemplateById,
   type ExerciseTemplate,
 } from '../data/templates'
-import { useSettingsStore } from './settingsStore'
+import { useSettingsStore, isDeloadActive } from './settingsStore'
 import { computeTarget, type ProgressionTarget } from '../utils/progression'
 
 interface SetInput {
@@ -43,7 +43,8 @@ interface WorkoutState {
 async function buildSetInputs(
   sessionId: number,
   exercises: ExerciseTemplate[],
-  templateId: string
+  templateId: string,
+  deload = false
 ): Promise<{ inputs: SetInput[]; targets: Record<string, ProgressionTarget> }> {
   const loggedSets = await db.loggedSets.where({ sessionId }).toArray()
   const prs = await db.personalRecords.where({ sessionId }).toArray()
@@ -59,10 +60,13 @@ async function buildSetInputs(
     const declined =
       previous.sessionId !== null &&
       settings.declinedIncrease[ex.id] === previous.sessionId
-    const target = computeTarget(ex, prevForEx, unit, declined)
+    const target = computeTarget(ex, prevForEx, unit, declined, deload)
     if (target) targets[ex.id] = target
 
-    for (let s = 1; s <= ex.targetSets; s++) {
+    // Deload: one set fewer per working exercise, never below two.
+    const setCount =
+      deload && !ex.warmup ? Math.max(2, ex.targetSets - 1) : ex.targetSets
+    for (let s = 1; s <= setCount; s++) {
       const logged = loggedSets.find(
         (l) => l.exerciseId === ex.id && l.setNumber === s
       )
@@ -77,9 +81,11 @@ async function buildSetInputs(
       const prev = previousSets.find(
         (p) => p.exerciseId === ex.id && p.setNumber === s
       )
-      // When progressing load, prefill every set with the new working weight.
+      // When progressing (or deloading) load, prefill every set with the new working weight.
       const suggested =
-        target?.kind === 'increase' ? target.weight : prev?.weight ?? null
+        target?.kind === 'increase' || target?.kind === 'deload'
+          ? target.weight
+          : prev?.weight ?? null
       inputs.push({
         exerciseId: ex.id,
         setNumber: s,
@@ -108,6 +114,7 @@ export const useWorkoutStore = create<WorkoutState>()((set, get) => ({
       return
     }
 
+    const deload = isDeloadActive(useSettingsStore.getState().deloadStartedAt, date)
     const sessionId = (await db.workoutSessions.add({
       templateId,
       date,
@@ -116,10 +123,11 @@ export const useWorkoutStore = create<WorkoutState>()((set, get) => ({
       completedAt: null,
       notes: null,
       exerciseSwaps: {},
+      deload,
     })) as number
 
     const session = await db.workoutSessions.get(sessionId)
-    const { inputs, targets } = await buildSetInputs(sessionId, exercises, templateId)
+    const { inputs, targets } = await buildSetInputs(sessionId, exercises, templateId, deload)
 
     set({ activeSession: session || null, sets: inputs, targets })
   },
@@ -138,7 +146,8 @@ export const useWorkoutStore = create<WorkoutState>()((set, get) => ({
     const { inputs, targets } = await buildSetInputs(
       sessionId,
       effectiveExercises,
-      session.templateId
+      session.templateId,
+      !!session.deload
     )
 
     set({ activeSession: session, sets: inputs, targets })
@@ -272,7 +281,8 @@ export const useWorkoutStore = create<WorkoutState>()((set, get) => ({
     const { inputs, targets } = await buildSetInputs(
       activeSession.id,
       effectiveExercises,
-      activeSession.templateId
+      activeSession.templateId,
+      !!updated.deload
     )
 
     set({ activeSession: updated, sets: inputs, targets })
@@ -316,10 +326,12 @@ async function loadPreviousWeights(
   templateId: string,
   exercises: ExerciseTemplate[]
 ): Promise<PreviousSets> {
+  // Deload sessions are skipped so the week after picks up from the last
+  // normal session rather than the lightened one.
   const previousSession = await db.workoutSessions
     .where('templateId')
     .equals(templateId)
-    .filter((s) => s.completedAt !== null)
+    .filter((s) => s.completedAt !== null && !s.deload)
     .reverse()
     .sortBy('date')
 

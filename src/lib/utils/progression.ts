@@ -8,8 +8,11 @@ export interface PrevSet {
 }
 
 export interface ProgressionTarget {
-  /** increase = add load; hold = same load, chase reps; reps = bodyweight rep goal. */
-  kind: 'increase' | 'hold' | 'reps'
+  /**
+   * increase = add load; hold = same load, chase reps; reps = bodyweight rep
+   * goal; deload = lighter load at the bottom of the range.
+   */
+  kind: 'increase' | 'hold' | 'reps' | 'deload'
   weight: number | null
   /** Rep goal for the hardest set. */
   reps: number
@@ -51,12 +54,15 @@ function round(n: number): number {
  * - Otherwise hold the weight and aim for one more rep than the weakest set.
  * - Bodyweight: chase reps only.
  * `declined` = the lifter turned off "added next time" after that session.
+ * `deload` = this session is in a deload week: 90% of the working weight
+ * (rounded down to the increment), reps at the bottom of the range.
  */
 export function computeTarget(
   ex: ExerciseTemplate,
   prev: PrevSet[],
   unit: WeightUnit,
-  declined = false
+  declined = false,
+  deload = false
 ): ProgressionTarget | null {
   if (ex.warmup) return null
   if (prev.length === 0) return null
@@ -67,6 +73,7 @@ export function computeTarget(
   if (weighted.length === 0) {
     const lowest = Math.min(...prev.map((p) => p.reps))
     const allHitMax = prev.every((p) => p.reps >= max)
+    if (deload) return { kind: 'reps', weight: null, reps: min, unit: 'bw', increment: 0 }
     return {
       kind: 'reps',
       weight: null,
@@ -92,6 +99,12 @@ export function computeTarget(
   const lowest = Math.min(...atW.map((p) => p.reps))
   const allHitMax = atW.every((p) => p.reps >= max)
   const inc = incrementFor(ex, unit)
+
+  if (deload) {
+    const lighter =
+      unit === 'lvl' ? Math.max(1, w - 1) : Math.max(inc, Math.floor((w * 0.9) / inc) * inc)
+    return { kind: 'deload', weight: round(lighter), reps: min, unit, increment: 0 }
+  }
 
   if (allHitMax && !declined) {
     return { kind: 'increase', weight: round(w + inc), reps: min, unit, increment: inc }

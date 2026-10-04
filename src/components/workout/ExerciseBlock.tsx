@@ -100,7 +100,7 @@ export default function ExerciseBlock({
     const logged = await completeSet(exercise.id, setNumber)
     if (!logged || logged.id === undefined) return
 
-    if (exercise.warmup) {
+    if (exercise.warmup || activeSession.deload) {
       onSetCompleted()
       return
     }
@@ -234,7 +234,7 @@ export default function ExerciseBlock({
         ))}
       </div>
 
-      {nextTime?.kind === 'increase' && nextTime.unit !== 'bw' && (
+      {nextTime?.kind === 'increase' && nextTime.unit !== 'bw' && !activeSession?.deload && (
         <div
           className="flex items-center justify-between rounded-lg bg-bg-input px-3 py-2"
           style={{ marginLeft: indented ? 18 : 0 }}

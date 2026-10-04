@@ -118,6 +118,11 @@ export default function Log() {
                       <div>
                         <p className="text-sm font-medium text-text-primary">
                           {template?.name ?? session.templateId}
+                          {session.deload && (
+                            <span className="ml-2 rounded-sm bg-accent-coral/15 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-widest text-accent-coral">
+                              Deload
+                            </span>
+                          )}
                         </p>
                         <p className="text-xs text-text-tertiary">
                           {formatDate(session.date)}
