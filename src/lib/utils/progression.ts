@@ -25,6 +25,7 @@ export const INCREMENTS: Record<ExerciseTemplate['equipmentType'], number> = {
   cable: 2.5,
   machine: 2.5,
   bodyweight: 2.5,
+  band: 0,
 }
 
 export function parseRepRange(target: string): { min: number; max: number } {
