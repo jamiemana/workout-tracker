@@ -120,10 +120,10 @@ export const workoutTemplates: WorkoutTemplate[] = [
       { id: 'pla_chest_supported_row', name: 'Chest supported dumbbell row', targetSets: 3, targetReps: '8-10', supersetGroup: 'SS2', supersetPosition: 'a', equipmentType: 'dumbbell', muscle: 'upper_back', secondary: ['lats', 'biceps'] },
       { id: 'pla_swiss_ball_jackknife', name: 'Swiss ball jackknife', targetSets: 3, targetReps: '12-15', supersetGroup: 'SS2', supersetPosition: 'b', equipmentType: 'bodyweight', isBodyweight: true, alternativeId: 'pla_hanging_leg_raise', muscle: 'core' },
       { id: 'pla_seated_cable_row', name: 'Seated cable row', targetSets: 2, targetSetsMax: 3, targetReps: '10-12', supersetGroup: 'SS3', supersetPosition: 'a', equipmentType: 'cable', alternativeId: 'pla_hanging_row', muscle: 'upper_back', secondary: ['lats', 'biceps'] },
-      { id: 'pla_standing_calf_raise', name: 'Standing calf raise', targetSets: 3, targetReps: '10-15', supersetGroup: 'SS3', supersetPosition: 'b', equipmentType: 'machine', isBodyweight: true, muscle: 'calves' },
+      { id: 'pla_cable_crunch', name: 'Cable crunch / weighted sit-up', targetSets: 3, targetReps: '12-15', supersetGroup: 'SS3', supersetPosition: 'b', equipmentType: 'cable', muscle: 'core' },
       { id: 'pla_bb_curl', name: 'Barbell or DB curl', targetSets: 3, targetReps: '8-12', supersetGroup: 'SS4', supersetPosition: 'a', equipmentType: 'barbell', muscle: 'biceps' },
       { id: 'pla_rear_delt_fly', name: 'Rear delt fly', targetSets: 3, targetReps: '12-15', supersetGroup: 'SS4', supersetPosition: 'b', equipmentType: 'dumbbell', muscle: 'rear_delt', secondary: ['upper_back'] },
-      { id: 'pla_cable_crunch', name: 'Cable crunch / weighted sit-up', targetSets: 3, targetReps: '12-15', supersetGroup: null, supersetPosition: null, equipmentType: 'cable', muscle: 'core' },
+      { id: 'pla_standing_calf_raise', name: 'Standing calf raise', targetSets: 3, targetReps: '10-15', supersetGroup: null, supersetPosition: null, equipmentType: 'machine', isBodyweight: true, muscle: 'calves' },
     ],
   },
   {
