@@ -92,7 +92,7 @@ export default function Settings() {
             value={restTimerDefault}
             min={30}
             max={300}
-            onChange={(e) => setRestTimerDefault(parseInt(e.target.value) || 120)}
+            onChange={(e) => setRestTimerDefault(parseInt(e.target.value) || 90)}
             className="w-full rounded-lg border border-border-subtle bg-bg-input px-4 py-3 font-mono text-sm text-text-primary"
           />
         </div>

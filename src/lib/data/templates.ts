@@ -74,74 +74,128 @@ export interface ExerciseTemplate {
 }
 
 export interface WorkoutTemplate {
-  id: 'push_a' | 'push_b' | 'pull_a' | 'pull_b'
+  id: 'push' | 'legs' | 'pull' | 'upper' | 'lower'
   name: string
   exercises: ExerciseTemplate[]
 }
 
+const bandWarmup = (id: string): ExerciseTemplate => ({
+  id, name: 'Band external rotations', targetSets: 1, targetReps: '15-20/side', supersetGroup: null, supersetPosition: null, equipmentType: 'band', isBodyweight: true, warmup: true, muscle: 'rear_delt',
+})
+
+// Shared movements appear on two days under one id so PRs and pre-fill carry
+// across; only the superset slot differs.
+const hipThrust = (group: string, pos: 'a' | 'b'): ExerciseTemplate => ({
+  id: 'plb_hip_thrust', name: 'Hip thrust / glute bridge', targetSets: 3, targetReps: '8-12', supersetGroup: group, supersetPosition: pos, equipmentType: 'barbell', muscle: 'glutes', secondary: ['hamstrings'],
+})
+const hamCurl = (group: string, pos: 'a' | 'b'): ExerciseTemplate => ({
+  id: 'pla_swiss_ball_leg_curl', name: 'Swiss ball hamstring curl', targetSets: 3, targetReps: '10-15', supersetGroup: group, supersetPosition: pos, equipmentType: 'bodyweight', isBodyweight: true, muscle: 'hamstrings', secondary: ['glutes'],
+})
+const legExtension = (group: string, pos: 'a' | 'b'): ExerciseTemplate => ({
+  id: 'pa_leg_extension', name: 'Leg extension', targetSets: 3, targetReps: '10-15', supersetGroup: group, supersetPosition: pos, equipmentType: 'machine', muscle: 'quads',
+})
+const standingCalf = (group: string | null, pos: 'a' | 'b' | null): ExerciseTemplate => ({
+  id: 'pla_standing_calf_raise', name: 'Standing calf raise', targetSets: 3, targetReps: '10-15', supersetGroup: group, supersetPosition: pos, equipmentType: 'machine', isBodyweight: true, muscle: 'calves',
+})
+const seatedCalf = (group: string | null, pos: 'a' | 'b' | null): ExerciseTemplate => ({
+  id: 'lo_seated_calf_raise', name: 'Seated calf raise', targetSets: 3, targetReps: '10-15', supersetGroup: group, supersetPosition: pos, equipmentType: 'machine', isBodyweight: true, muscle: 'calves',
+})
+
+// Three one-set ab movements that close Push, Pull and Upper.
+const absBlock = (
+  flexion: { id: string; name: 'Swiss ball jackknife' | 'Hanging leg raise'; alternativeId: string },
+  crunchId: string,
+  pallofId: string
+): ExerciseTemplate[] => [
+  { id: flexion.id, name: flexion.name, targetSets: 1, targetReps: '12-15', supersetGroup: null, supersetPosition: null, equipmentType: 'bodyweight', isBodyweight: true, alternativeId: flexion.alternativeId, muscle: 'core' },
+  { id: crunchId, name: 'Cable crunch / weighted sit-up', targetSets: 1, targetReps: '12-15', supersetGroup: null, supersetPosition: null, equipmentType: 'cable', muscle: 'core' },
+  { id: pallofId, name: 'Pallof press', targetSets: 1, targetReps: '10-12/side', supersetGroup: null, supersetPosition: null, equipmentType: 'cable', muscle: 'core' },
+]
+
 export const workoutTemplates: WorkoutTemplate[] = [
   {
-    id: 'push_a',
-    name: 'Push A',
+    id: 'push',
+    name: 'Push',
     exercises: [
-      { id: 'pa_band_er', name: 'Band external rotations', targetSets: 1, targetReps: '15-20/side', supersetGroup: null, supersetPosition: null, equipmentType: 'band', isBodyweight: true, warmup: true, muscle: 'rear_delt' },
+      bandWarmup('pa_band_er'),
       { id: 'pa_incline_db_press', name: 'Incline dumbbell press', targetSets: 3, targetReps: '6-8', supersetGroup: 'SS1', supersetPosition: 'a', equipmentType: 'dumbbell', muscle: 'chest', secondary: ['front_delt', 'triceps'] },
-      { id: 'pa_bulgarian_split_squat', name: 'Bulgarian split squat', targetSets: 3, targetReps: '8-12', supersetGroup: 'SS1', supersetPosition: 'b', equipmentType: 'dumbbell', muscle: 'quads', secondary: ['glutes'] },
+      { id: 'pa_lateral_raise', name: 'Lateral raise', targetSets: 4, targetReps: '12-15', supersetGroup: 'SS1', supersetPosition: 'b', equipmentType: 'dumbbell', muscle: 'side_delt' },
       { id: 'pa_seated_db_ohp', name: 'Seated dumbbell OHP', targetSets: 2, targetReps: '8-10', supersetGroup: 'SS2', supersetPosition: 'a', equipmentType: 'dumbbell', muscle: 'front_delt', secondary: ['side_delt', 'triceps'] },
-      { id: 'pa_leg_extension', name: 'Leg extension', targetSets: 3, targetReps: '10-15', supersetGroup: 'SS2', supersetPosition: 'b', equipmentType: 'machine', muscle: 'quads' },
-      { id: 'pa_straight_bar_pushdown', name: 'Straight bar pushdown / skull crusher', targetSets: 2, targetReps: '10-12', supersetGroup: 'SS3', supersetPosition: 'a', equipmentType: 'cable', muscle: 'triceps' },
-      { id: 'pa_lateral_raise', name: 'Lateral raise', targetSets: 3, targetReps: '12-15', supersetGroup: 'SS3', supersetPosition: 'b', equipmentType: 'dumbbell', muscle: 'side_delt' },
-      { id: 'pa_db_fly', name: 'Dumbbell fly', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS4', supersetPosition: 'a', equipmentType: 'dumbbell', muscle: 'chest', secondary: ['front_delt'] },
-      { id: 'pa_rope_pushdown', name: 'Single-arm rope pushdown', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS4', supersetPosition: 'b', equipmentType: 'cable', muscle: 'triceps' },
+      { id: 'pa_db_fly', name: 'Dumbbell fly', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS2', supersetPosition: 'b', equipmentType: 'dumbbell', muscle: 'chest', secondary: ['front_delt'] },
+      { id: 'pb_dips', name: 'Dips', targetSets: 3, targetReps: '8-10', supersetGroup: 'SS3', supersetPosition: 'a', equipmentType: 'bodyweight', isBodyweight: true, muscle: 'triceps', secondary: ['chest', 'front_delt'] },
+      { id: 'pb_cable_lateral_raise', name: 'Cable lateral raise', targetSets: 4, targetReps: '12-15', supersetGroup: 'SS3', supersetPosition: 'b', equipmentType: 'cable', muscle: 'side_delt' },
+      ...absBlock({ id: 'pla_swiss_ball_jackknife', name: 'Swiss ball jackknife', alternativeId: 'pla_hanging_leg_raise' }, 'pla_cable_crunch', 'pla_pallof_press'),
     ],
   },
   {
-    id: 'push_b',
-    name: 'Push B',
+    id: 'legs',
+    name: 'Legs',
     exercises: [
-      { id: 'pb_band_er', name: 'Band external rotations', targetSets: 1, targetReps: '15-20/side', supersetGroup: null, supersetPosition: null, equipmentType: 'band', isBodyweight: true, warmup: true, muscle: 'rear_delt' },
-      { id: 'pb_flat_db_press', name: 'Flat dumbbell press', targetSets: 3, targetReps: '6-8', supersetGroup: 'SS1', supersetPosition: 'a', equipmentType: 'dumbbell', alternativeId: 'pb_machine_bench_press', muscle: 'chest', secondary: ['front_delt', 'triceps'] },
-      { id: 'pb_swiss_ball_squat', name: 'Swiss ball squat', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS1', supersetPosition: 'b', equipmentType: 'dumbbell', muscle: 'quads', secondary: ['glutes'] },
-      { id: 'pb_machine_shoulder_press', name: 'Machine shoulder press', targetSets: 3, targetReps: '8-10', supersetGroup: 'SS2', supersetPosition: 'a', equipmentType: 'machine', alternativeId: 'pb_db_shoulder_press', muscle: 'front_delt', secondary: ['side_delt', 'triceps'] },
-      { id: 'pb_goblet_squat', name: 'Goblet squat', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS2', supersetPosition: 'b', equipmentType: 'dumbbell', muscle: 'quads', secondary: ['glutes'] },
-      { id: 'pb_dips', name: 'Dips', targetSets: 2, targetSetsMax: 3, targetReps: '8-10', supersetGroup: 'SS3', supersetPosition: 'a', equipmentType: 'bodyweight', isBodyweight: true, muscle: 'triceps', secondary: ['chest', 'front_delt'] },
-      { id: 'pb_cable_lateral_raise', name: 'Cable lateral raise', targetSets: 3, targetReps: '12-15', supersetGroup: 'SS3', supersetPosition: 'b', equipmentType: 'cable', muscle: 'side_delt' },
-      { id: 'pb_db_fly', name: 'Dumbbell fly', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS4', supersetPosition: 'a', equipmentType: 'dumbbell', muscle: 'chest', secondary: ['front_delt'] },
-      { id: 'pb_single_arm_rope_ext', name: 'Single-arm rope extension', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS4', supersetPosition: 'b', equipmentType: 'cable', muscle: 'triceps' },
+      bandWarmup('le_band_er'),
+      { id: 'pa_bulgarian_split_squat', name: 'Bulgarian split squat', targetSets: 3, targetReps: '8-12', supersetGroup: 'SS1', supersetPosition: 'a', equipmentType: 'dumbbell', muscle: 'quads', secondary: ['glutes'] },
+      standingCalf('SS1', 'b'),
+      { id: 'pb_goblet_squat', name: 'Goblet squat', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS2', supersetPosition: 'a', equipmentType: 'dumbbell', muscle: 'quads', secondary: ['glutes'] },
+      hamCurl('SS2', 'b'),
+      legExtension('SS3', 'a'),
+      hipThrust('SS3', 'b'),
+      seatedCalf(null, null),
     ],
   },
   {
-    id: 'pull_a',
-    name: 'Pull A',
+    id: 'pull',
+    name: 'Pull',
     exercises: [
-      { id: 'pla_band_er', name: 'Band external rotations', targetSets: 1, targetReps: '15-20/side', supersetGroup: null, supersetPosition: null, equipmentType: 'band', isBodyweight: true, warmup: true, muscle: 'rear_delt' },
+      bandWarmup('pla_band_er'),
       { id: 'pla_pullups', name: 'Pull-ups / lat pulldown', targetSets: 3, targetReps: '6-10', supersetGroup: 'SS1', supersetPosition: 'a', equipmentType: 'bodyweight', isBodyweight: true, muscle: 'lats', secondary: ['biceps'] },
-      { id: 'pla_swiss_ball_leg_curl', name: 'Swiss ball hamstring curl', targetSets: 3, targetReps: '10-15', supersetGroup: 'SS1', supersetPosition: 'b', equipmentType: 'bodyweight', isBodyweight: true, muscle: 'hamstrings', secondary: ['glutes'] },
-      { id: 'pla_chest_supported_row', name: 'Chest supported dumbbell row', targetSets: 3, targetReps: '8-10', supersetGroup: 'SS2', supersetPosition: 'a', equipmentType: 'dumbbell', muscle: 'upper_back', secondary: ['lats', 'biceps'] },
-      { id: 'pla_swiss_ball_jackknife', name: 'Swiss ball jackknife', targetSets: 3, targetReps: '12-15', supersetGroup: 'SS2', supersetPosition: 'b', equipmentType: 'bodyweight', isBodyweight: true, alternativeId: 'pla_hanging_leg_raise', muscle: 'core' },
-      { id: 'pla_seated_cable_row', name: 'Seated cable row', targetSets: 2, targetSetsMax: 3, targetReps: '10-12', supersetGroup: 'SS3', supersetPosition: 'a', equipmentType: 'cable', alternativeId: 'pla_hanging_row', muscle: 'upper_back', secondary: ['lats', 'biceps'] },
-      { id: 'pla_cable_crunch', name: 'Cable crunch / weighted sit-up', targetSets: 3, targetReps: '12-15', supersetGroup: 'SS3', supersetPosition: 'b', equipmentType: 'cable', muscle: 'core' },
-      { id: 'pla_bb_curl', name: 'Barbell or DB curl', targetSets: 3, targetReps: '8-12', supersetGroup: 'SS4', supersetPosition: 'a', equipmentType: 'barbell', muscle: 'biceps' },
-      { id: 'pla_rear_delt_fly', name: 'Rear delt fly', targetSets: 3, targetReps: '12-15', supersetGroup: 'SS4', supersetPosition: 'b', equipmentType: 'dumbbell', muscle: 'rear_delt', secondary: ['upper_back'] },
-      { id: 'pla_standing_calf_raise', name: 'Standing calf raise', targetSets: 3, targetReps: '10-15', supersetGroup: null, supersetPosition: null, equipmentType: 'machine', isBodyweight: true, muscle: 'calves' },
+      { id: 'plb_face_pull', name: 'Face pull', targetSets: 3, targetReps: '12-15', supersetGroup: 'SS1', supersetPosition: 'b', equipmentType: 'cable', muscle: 'rear_delt', secondary: ['upper_back'] },
+      { id: 'pla_chest_supported_row', name: 'Chest supported dumbbell row', targetSets: 3, targetReps: '8-10', supersetGroup: 'SS2', supersetPosition: 'a', equipmentType: 'dumbbell', muscle: 'upper_back', secondary: ['lats', 'biceps', 'rear_delt'] },
+      { id: 'pla_rear_delt_fly', name: 'Rear delt fly', targetSets: 3, targetReps: '12-15', supersetGroup: 'SS2', supersetPosition: 'b', equipmentType: 'dumbbell', muscle: 'rear_delt', secondary: ['upper_back'] },
+      { id: 'pla_seated_cable_row', name: 'Seated cable row', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS3', supersetPosition: 'a', equipmentType: 'cable', alternativeId: 'pla_hanging_row', muscle: 'upper_back', secondary: ['lats', 'biceps', 'rear_delt'] },
+      { id: 'pla_bb_curl', name: 'Barbell or DB curl', targetSets: 3, targetReps: '8-12', supersetGroup: 'SS3', supersetPosition: 'b', equipmentType: 'barbell', muscle: 'biceps' },
+      ...absBlock({ id: 'plb_hanging_leg_raise', name: 'Hanging leg raise', alternativeId: 'plb_swiss_ball_jackknife' }, 'plb_cable_crunch', 'pl_pallof_press'),
     ],
   },
   {
-    id: 'pull_b',
-    name: 'Pull B',
+    id: 'upper',
+    name: 'Upper',
     exercises: [
-      { id: 'plb_band_er', name: 'Band external rotations', targetSets: 1, targetReps: '15-20/side', supersetGroup: null, supersetPosition: null, equipmentType: 'band', isBodyweight: true, warmup: true, muscle: 'rear_delt' },
-      { id: 'plb_lat_pulldown', name: 'Lat pulldown', targetSets: 3, targetReps: '8-12', supersetGroup: 'SS1', supersetPosition: 'a', equipmentType: 'cable', muscle: 'lats', secondary: ['biceps'] },
-      { id: 'plb_hip_thrust', name: 'Hip thrust / glute bridge', targetSets: 3, targetReps: '8-12', supersetGroup: 'SS1', supersetPosition: 'b', equipmentType: 'barbell', muscle: 'glutes', secondary: ['hamstrings'] },
-      { id: 'plb_chest_supported_row', name: 'Chest supported row', targetSets: 3, targetReps: '8-10', supersetGroup: 'SS2', supersetPosition: 'a', equipmentType: 'dumbbell', muscle: 'upper_back', secondary: ['lats', 'biceps'] },
-      { id: 'plb_hanging_leg_raise', name: 'Hanging leg raise', targetSets: 3, targetReps: '12-15', supersetGroup: 'SS2', supersetPosition: 'b', equipmentType: 'bodyweight', isBodyweight: true, alternativeId: 'plb_swiss_ball_jackknife', muscle: 'core' },
-      { id: 'plb_single_arm_cable_row', name: 'Single arm cable row', targetSets: 2, targetSetsMax: 3, targetReps: '10-12', supersetGroup: 'SS3', supersetPosition: 'a', equipmentType: 'cable', alternativeId: 'plb_hanging_row', muscle: 'upper_back', secondary: ['lats', 'biceps'] },
-      { id: 'plb_cable_crunch', name: 'Cable crunch / weighted sit-up', targetSets: 3, targetReps: '12-15', supersetGroup: 'SS3', supersetPosition: 'b', equipmentType: 'cable', muscle: 'core' },
-      { id: 'plb_ez_bar_curl', name: 'EZ bar curl', targetSets: 3, targetReps: '8-12', supersetGroup: 'SS4', supersetPosition: 'a', equipmentType: 'barbell', muscle: 'biceps' },
-      { id: 'plb_face_pull', name: 'Face pull', targetSets: 3, targetReps: '12-15', supersetGroup: 'SS4', supersetPosition: 'b', equipmentType: 'cable', muscle: 'rear_delt', secondary: ['upper_back'] },
+      bandWarmup('pb_band_er'),
+      { id: 'pb_flat_db_press', name: 'Flat dumbbell press', targetSets: 3, targetReps: '6-8', supersetGroup: 'SS1', supersetPosition: 'a', equipmentType: 'dumbbell', alternativeId: 'pb_machine_bench_press', muscle: 'chest', secondary: ['front_delt', 'triceps'] },
+      { id: 'plb_lat_pulldown', name: 'Lat pulldown', targetSets: 3, targetReps: '8-12', supersetGroup: 'SS1', supersetPosition: 'b', equipmentType: 'cable', muscle: 'lats', secondary: ['biceps'] },
+      { id: 'pb_machine_shoulder_press', name: 'Machine shoulder press', targetSets: 3, targetReps: '8-10', supersetGroup: 'SS2', supersetPosition: 'a', equipmentType: 'machine', alternativeId: 'pb_db_shoulder_press', muscle: 'front_delt', secondary: ['side_delt', 'triceps'] },
+      { id: 'plb_single_arm_cable_row', name: 'Single arm cable row', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS2', supersetPosition: 'b', equipmentType: 'cable', alternativeId: 'plb_hanging_row', muscle: 'upper_back', secondary: ['lats', 'biceps', 'rear_delt'] },
+      { id: 'plb_ez_bar_curl', name: 'EZ bar curl', targetSets: 3, targetReps: '8-12', supersetGroup: 'SS3', supersetPosition: 'a', equipmentType: 'barbell', muscle: 'biceps' },
+      { id: 'pa_rope_pushdown', name: 'Single-arm rope pushdown', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS3', supersetPosition: 'b', equipmentType: 'cable', muscle: 'triceps' },
+      ...absBlock({ id: 'up_swiss_ball_jackknife', name: 'Swiss ball jackknife', alternativeId: 'up_hanging_leg_raise' }, 'up_cable_crunch', 'up_pallof_press'),
+    ],
+  },
+  {
+    id: 'lower',
+    name: 'Lower',
+    exercises: [
+      bandWarmup('lo_band_er'),
+      hipThrust('SS1', 'a'),
+      seatedCalf('SS1', 'b'),
+      hamCurl('SS2', 'a'),
+      { id: 'pb_swiss_ball_squat', name: 'Swiss ball squat', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS2', supersetPosition: 'b', equipmentType: 'dumbbell', muscle: 'quads', secondary: ['glutes'] },
+      { id: 'lo_cable_pull_through', name: 'Cable pull-through', targetSets: 3, targetReps: '12-15', supersetGroup: 'SS3', supersetPosition: 'a', equipmentType: 'cable', muscle: 'glutes', secondary: ['hamstrings'] },
+      legExtension('SS3', 'b'),
+      standingCalf(null, null),
     ],
   },
 ]
+
+/** Names for sessions logged under the retired four-day templates. */
+export const LEGACY_TEMPLATE_NAMES: Record<string, string> = {
+  push_a: 'Push A',
+  push_b: 'Push B',
+  pull_a: 'Pull A',
+  pull_b: 'Pull B',
+}
+
+export function getTemplateName(id: string): string {
+  return getTemplateById(id)?.name ?? LEGACY_TEMPLATE_NAMES[id] ?? id
+}
 
 // Exercises usable only as swap targets (not part of the rotation).
 // Each mirrors its counterpart's set/rep targets and superset slot so the
@@ -153,8 +207,8 @@ export const alternativeExercises: Record<string, ExerciseTemplate> = {
     name: 'Machine bench press',
     targetSets: 3,
     targetReps: '6-8',
-    supersetGroup: null,
-    supersetPosition: null,
+    supersetGroup: 'SS1',
+    supersetPosition: 'a',
     equipmentType: 'machine',
     alternativeId: 'pb_flat_db_press',
   },
@@ -162,7 +216,7 @@ export const alternativeExercises: Record<string, ExerciseTemplate> = {
     id: 'pb_db_shoulder_press',
     muscle: 'front_delt', secondary: ['side_delt', 'triceps'],
     name: 'DB shoulder press',
-    targetSets: 2,
+    targetSets: 3,
     targetReps: '8-10',
     supersetGroup: 'SS2',
     supersetPosition: 'a',
@@ -173,10 +227,10 @@ export const alternativeExercises: Record<string, ExerciseTemplate> = {
     id: 'pla_hanging_leg_raise',
     muscle: 'core',
     name: 'Hanging leg raise',
-    targetSets: 3,
+    targetSets: 1,
     targetReps: '12-15',
-    supersetGroup: 'SS2',
-    supersetPosition: 'b',
+    supersetGroup: null,
+    supersetPosition: null,
     equipmentType: 'bodyweight',
     isBodyweight: true,
     alternativeId: 'pla_swiss_ball_jackknife',
@@ -185,34 +239,46 @@ export const alternativeExercises: Record<string, ExerciseTemplate> = {
     id: 'plb_swiss_ball_jackknife',
     muscle: 'core',
     name: 'Swiss ball jackknife',
-    targetSets: 3,
+    targetSets: 1,
     targetReps: '12-15',
-    supersetGroup: 'SS2',
-    supersetPosition: 'b',
+    supersetGroup: null,
+    supersetPosition: null,
     equipmentType: 'bodyweight',
     isBodyweight: true,
     alternativeId: 'plb_hanging_leg_raise',
   },
-  pla_hanging_row: {
-    id: 'pla_hanging_row',
-    muscle: 'upper_back', secondary: ['lats', 'biceps'],
-    name: 'Hanging row',
-    targetSets: 2,
-    targetReps: '10-12',
+  up_hanging_leg_raise: {
+    id: 'up_hanging_leg_raise',
+    muscle: 'core',
+    name: 'Hanging leg raise',
+    targetSets: 1,
+    targetReps: '12-15',
     supersetGroup: null,
     supersetPosition: null,
+    equipmentType: 'bodyweight',
+    isBodyweight: true,
+    alternativeId: 'up_swiss_ball_jackknife',
+  },
+  pla_hanging_row: {
+    id: 'pla_hanging_row',
+    muscle: 'upper_back', secondary: ['lats', 'biceps', 'rear_delt'],
+    name: 'Hanging row',
+    targetSets: 3,
+    targetReps: '10-12',
+    supersetGroup: 'SS3',
+    supersetPosition: 'a',
     equipmentType: 'bodyweight',
     isBodyweight: true,
     alternativeId: 'pla_seated_cable_row',
   },
   plb_hanging_row: {
     id: 'plb_hanging_row',
-    muscle: 'upper_back', secondary: ['lats', 'biceps'],
+    muscle: 'upper_back', secondary: ['lats', 'biceps', 'rear_delt'],
     name: 'Hanging row',
-    targetSets: 2,
+    targetSets: 3,
     targetReps: '10-12',
-    supersetGroup: null,
-    supersetPosition: null,
+    supersetGroup: 'SS2',
+    supersetPosition: 'b',
     equipmentType: 'bodyweight',
     isBodyweight: true,
     alternativeId: 'plb_single_arm_cable_row',
@@ -231,8 +297,12 @@ export function getExerciseById(id: string): ExerciseTemplate | undefined {
   return alternativeExercises[id]
 }
 
+/** Every rotation exercise once, in program order (shared movements dedupe). */
 export function getAllExercises(): ExerciseTemplate[] {
-  return workoutTemplates.flatMap((t) => t.exercises)
+  const seen = new Set<string>()
+  return workoutTemplates
+    .flatMap((t) => t.exercises)
+    .filter((e) => !seen.has(e.id) && seen.add(e.id))
 }
 
 export function applyExerciseSwaps(

@@ -20,13 +20,13 @@ export default function Onboarding() {
           </div>
           <h1 className="text-2xl font-semibold text-text-primary">Workout</h1>
           <p className="mt-2 text-sm text-text-tertiary">
-            Push/Pull 4-day rotation tracker
+            Five-day split tracker
           </p>
         </div>
 
         <div className="space-y-6">
           <p className="text-center text-xs text-text-tertiary">
-            Workouts run in sequence: Push A, Pull A, Push B, Pull B. Whenever you open the app, the next one is ready.
+            Workouts run in sequence: Push, Legs, Pull, Upper, Lower. Take rest days whenever you like; the next one is ready when you open the app.
           </p>
 
           <button

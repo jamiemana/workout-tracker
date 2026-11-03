@@ -12,8 +12,8 @@ export interface Landmarks {
 }
 
 // Weekly hard-set landmarks per muscle, primary sets counted in full and
-// secondary at half. Conventional hypertrophy ranges rounded for four
-// sessions per cycle at 43. Tune here, nowhere else.
+// secondary at half. Conventional hypertrophy ranges (10-18 weekly sets for
+// most muscles) rounded for five sessions a week at 43. Tune here, nowhere else.
 export const LANDMARKS: Record<Muscle, Landmarks> = {
   chest:      { growth: 6, focus: 12, max: 16 },
   front_delt: { growth: 4, focus: 8,  max: 12 },

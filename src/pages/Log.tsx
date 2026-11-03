@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { db, type WorkoutSession, type LoggedSet } from '@/lib/data/db'
-import { getTemplateById } from '@/lib/data/templates'
+import { getExerciseById, getTemplateById, getTemplateName } from '@/lib/data/templates'
 import { formatDate } from '@/lib/utils/rotation'
 import Header from '@/components/layout/Header'
 
@@ -11,7 +11,18 @@ interface SessionWithDetails extends WorkoutSession {
   prCount: number
 }
 
-type Filter = 'all' | 'push' | 'pull'
+type Filter = 'all' | 'push' | 'legs' | 'pull' | 'upper' | 'lower'
+const FILTERS: Filter[] = ['all', 'push', 'legs', 'pull', 'upper', 'lower']
+
+/** Exercises of a session in template order, with any swapped or retired
+ *  exercise appended by first appearance so its sets still show. */
+function exerciseOrder(session: SessionWithDetails): string[] {
+  const ids = (getTemplateById(session.templateId)?.exercises ?? []).map((e) => e.id)
+  for (const s of session.sets) {
+    if (s.completed && !ids.includes(s.exerciseId)) ids.push(s.exerciseId)
+  }
+  return ids
+}
 
 export default function Log() {
   const [sessions, setSessions] = useState<SessionWithDetails[]>([])
@@ -62,7 +73,7 @@ export default function Log() {
 
   const filtered = sessions.filter((s) => {
     if (filter === 'all') return true
-    return s.templateId.startsWith(filter)
+    return s.templateId === filter
   })
 
   return (
@@ -77,12 +88,12 @@ export default function Log() {
         </h1>
 
         {/* Filter tabs */}
-        <div className="mb-4 flex gap-2">
-          {(['all', 'push', 'pull'] as Filter[]).map((f) => (
+        <div className="mb-4 flex flex-wrap gap-2">
+          {FILTERS.map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`rounded-md px-4 py-1.5 text-xs font-medium capitalize transition-colors ${
+              className={`rounded-md px-3 py-1.5 text-xs font-medium capitalize transition-colors ${
                 filter === f
                   ? 'bg-accent-lime/15 text-accent-lime'
                   : 'bg-bg-input text-text-secondary'
@@ -100,7 +111,6 @@ export default function Log() {
         ) : (
           <div className="space-y-2">
             {filtered.map((session) => {
-              const template = getTemplateById(session.templateId)
               const isExpanded = expandedId === session.id
 
               return (
@@ -117,7 +127,7 @@ export default function Log() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-text-primary">
-                          {template?.name ?? session.templateId}
+                          {getTemplateName(session.templateId)}
                           {session.deload && (
                             <span className="ml-2 rounded-sm bg-accent-coral/15 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-widest text-accent-coral">
                               Deload
@@ -159,19 +169,19 @@ export default function Log() {
                     </div>
                   </button>
 
-                  {isExpanded && template && (
+                  {isExpanded && (
                     <div className="border-t border-border-default px-4 py-3 space-y-3">
-                      {template.exercises.map((ex) => {
+                      {exerciseOrder(session).map((exerciseId) => {
                         const exSets = session.sets
-                          .filter((s) => s.exerciseId === ex.id && s.completed)
+                          .filter((s) => s.exerciseId === exerciseId && s.completed)
                           .sort((a, b) => a.setNumber - b.setNumber)
 
                         if (exSets.length === 0) return null
 
                         return (
-                          <div key={ex.id}>
+                          <div key={exerciseId}>
                             <p className="text-xs font-medium text-text-secondary mb-1">
-                              {ex.name}
+                              {getExerciseById(exerciseId)?.name ?? exerciseId}
                             </p>
                             <div className="flex flex-wrap gap-2">
                               {exSets.map((s) => (

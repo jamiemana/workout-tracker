@@ -55,7 +55,7 @@ export function plannedSetsForTemplate(t: WorkoutTemplate): MuscleSets {
   return acc
 }
 
-/** Planned sets per muscle across one full pass of the four workouts. */
+/** Planned sets per muscle across one full pass of the five workouts. */
 export function plannedSetsPerCycle(): MuscleSets {
   const acc = emptySets()
   for (const t of workoutTemplates) {

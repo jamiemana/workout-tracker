@@ -53,7 +53,7 @@ export const useSettingsStore = create<SettingsState>()(
       exerciseUnits: {},
       declinedIncrease: {},
       deloadStartedAt: null,
-      restTimerDefault: 120,
+      restTimerDefault: 90,
       autoBackup: true,
       onboarded: false,
       setStartDate: (date) => set({ startDate: date }),
@@ -78,6 +78,16 @@ export const useSettingsStore = create<SettingsState>()(
     {
       name: 'workout-settings',
       storage: createJSONStorage(() => localStorage),
+      version: 2,
+      migrate: (persisted, version) => {
+        const state = persisted as Partial<SettingsState>
+        // v2: the default rest dropped from 120 s to 90 s for the five-day
+        // split. Only the old default moves; a hand-set value is kept.
+        if (version < 2 && state.restTimerDefault === 120) {
+          return { ...state, restTimerDefault: 90 }
+        }
+        return state
+      },
     }
   )
 )

@@ -3,8 +3,11 @@ import { workoutTemplates } from '../data/templates'
 import { db } from '../data/db'
 
 // The next workout is whichever follows the most recently completed session.
-// No calendar, no rest days: Push A -> Pull A -> Push B -> Pull B -> Push A ...
-export const ROTATION: WorkoutTemplate['id'][] = ['push_a', 'pull_a', 'push_b', 'pull_b']
+// No calendar, no rest days: Push -> Legs -> Pull -> Upper -> Lower -> Push ...
+// Rest days are taken between whichever sessions suit the week.
+// A session logged under a retired template id has index -1, so the next
+// workout after the switch is Push.
+export const ROTATION: WorkoutTemplate['id'][] = ['push', 'legs', 'pull', 'upper', 'lower']
 
 export interface RotationInfo {
   /** The workout to do next. */

@@ -63,9 +63,10 @@ async function buildSetInputs(
     const target = computeTarget(ex, prevForEx, unit, declined, deload)
     if (target) targets[ex.id] = target
 
-    // Deload: one set fewer per working exercise, never below two.
+    // Deload: one set fewer per working exercise; one- and two-set
+    // exercises (abs, OHP) keep their count.
     const setCount =
-      deload && !ex.warmup ? Math.max(2, ex.targetSets - 1) : ex.targetSets
+      deload && !ex.warmup && ex.targetSets > 2 ? ex.targetSets - 1 : ex.targetSets
     for (let s = 1; s <= setCount; s++) {
       const logged = loggedSets.find(
         (l) => l.exerciseId === ex.id && l.setNumber === s
