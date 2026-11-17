@@ -32,7 +32,6 @@ export default function Today() {
   const [overrideTemplateId, setOverrideTemplateId] = useState<string | null>(null)
   const [showSwitcher, setShowSwitcher] = useState(false)
   const [stats, setStats] = useState<{
-    totalVolume: number
     prCount: number
     durationMinutes: number
   } | null>(null)
@@ -75,7 +74,6 @@ export default function Today() {
           const s = await getSessionStats(activeSession.id)
           if (s) {
             setStats({
-              totalVolume: s.totalVolume,
               prCount: s.prCount,
               durationMinutes: s.durationMinutes,
             })
@@ -92,7 +90,6 @@ export default function Today() {
     const s = await getSessionStats(activeSession.id)
     if (s) {
       setStats({
-        totalVolume: s.totalVolume,
         prCount: s.prCount,
         durationMinutes: s.durationMinutes,
       })
@@ -347,7 +344,6 @@ export default function Today() {
       {/* Completion summary */}
       {showCompletion && stats && (
         <CompletionSummary
-          totalVolume={stats.totalVolume}
           prCount={stats.prCount}
           durationMinutes={stats.durationMinutes}
           onFinish={handleFinish}

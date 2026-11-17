@@ -44,23 +44,21 @@ interface WorkoutState {
 async function buildSetInputs(
   sessionId: number,
   exercises: ExerciseTemplate[],
-  templateId: string,
   deload = false
 ): Promise<{ inputs: SetInput[]; targets: Record<string, ProgressionTarget> }> {
   const loggedSets = await db.loggedSets.where({ sessionId }).toArray()
   const prs = await db.personalRecords.where({ sessionId }).toArray()
-  const previous = await loadPreviousWeights(templateId, exercises)
-  const previousSets = previous.sets
+  const previous = await loadPreviousSets(sessionId, exercises)
   const settings = useSettingsStore.getState()
 
   const inputs: SetInput[] = []
   const targets: Record<string, ProgressionTarget> = {}
   for (const ex of exercises) {
-    const prevForEx = previousSets.filter((p) => p.exerciseId === ex.id)
+    const prevForEx = previous[ex.id]?.sets ?? []
     const unit = settings.exerciseUnits[ex.id] ?? 'kg'
     const declined =
-      previous.sessionId !== null &&
-      settings.declinedIncrease[ex.id] === previous.sessionId
+      previous[ex.id] !== undefined &&
+      settings.declinedIncrease[ex.id] === previous[ex.id].sessionId
     const target = computeTarget(ex, prevForEx, unit, declined, deload)
     if (target) targets[ex.id] = target
 
@@ -80,9 +78,10 @@ async function buildSetInputs(
               p.reps === logged.reps
           )
         : undefined
-      const prev = previousSets.find(
-        (p) => p.exerciseId === ex.id && p.setNumber === s
-      )
+      // A set beyond last time's count (e.g. after a short session) takes
+      // the last set that was logged.
+      const prev =
+        prevForEx.find((p) => p.setNumber === s) ?? prevForEx[prevForEx.length - 1]
       // When progressing (or deloading) load, prefill every set with the new working weight.
       const suggested =
         target?.kind === 'increase' || target?.kind === 'deload'
@@ -129,7 +128,7 @@ export const useWorkoutStore = create<WorkoutState>()((set, get) => ({
     })) as number
 
     const session = await db.workoutSessions.get(sessionId)
-    const { inputs, targets } = await buildSetInputs(sessionId, exercises, templateId, deload)
+    const { inputs, targets } = await buildSetInputs(sessionId, exercises, deload)
 
     set({ activeSession: session || null, sets: inputs, targets })
   },
@@ -148,7 +147,6 @@ export const useWorkoutStore = create<WorkoutState>()((set, get) => ({
     const { inputs, targets } = await buildSetInputs(
       sessionId,
       effectiveExercises,
-      session.templateId,
       !!session.deload
     )
 
@@ -285,7 +283,6 @@ export const useWorkoutStore = create<WorkoutState>()((set, get) => ({
     const { inputs, targets } = await buildSetInputs(
       activeSession.id,
       effectiveExercises,
-      activeSession.templateId,
       !!updated.deload
     )
 
@@ -321,43 +318,56 @@ export const useWorkoutStore = create<WorkoutState>()((set, get) => ({
 }))
 
 interface PreviousSets {
-  /** Id of the previous completed session of this template, or null. */
-  sessionId: number | null
-  sets: { exerciseId: string; setNumber: number; weight: number | null; reps: number }[]
+  /** The session these sets were logged in. */
+  sessionId: number
+  /** Completed sets in set order. */
+  sets: { setNumber: number; weight: number | null; reps: number }[]
 }
 
-async function loadPreviousWeights(
-  templateId: string,
+/**
+ * For each exercise, the sets from the last session it was trained in,
+ * whichever workout that was: shared movements appear on two days, and
+ * exercises have moved between days as the program changed. The current
+ * session is skipped, as are deload sessions so the week after picks up from
+ * the last normal session rather than the lightened one.
+ */
+async function loadPreviousSets(
+  currentSessionId: number,
   exercises: ExerciseTemplate[]
-): Promise<PreviousSets> {
-  // Deload sessions are skipped so the week after picks up from the last
-  // normal session rather than the lightened one.
-  const previousSession = await db.workoutSessions
-    .where('templateId')
-    .equals(templateId)
-    .filter((s) => s.completedAt !== null && !s.deload)
-    .reverse()
-    .sortBy('date')
+): Promise<Record<string, PreviousSets>> {
+  const sessions = await db.workoutSessions.toArray()
+  const eligible = new Map(
+    sessions
+      .filter((s) => s.id !== undefined && s.id !== currentSessionId && !s.deload)
+      .map((s) => [s.id as number, s])
+  )
 
-  if (!previousSession.length) return { sessionId: null, sets: [] }
+  const out: Record<string, PreviousSets> = {}
+  for (const ex of exercises) {
+    const logged = await db.loggedSets
+      .where('exerciseId')
+      .equals(ex.id)
+      .filter((s) => s.completed && eligible.has(s.sessionId))
+      .toArray()
+    if (logged.length === 0) continue
 
-  const lastSession = previousSession[0]
-  if (!lastSession.id) return { sessionId: null, sets: [] }
-
-  const sets = await db.loggedSets
-    .where('sessionId')
-    .equals(lastSession.id)
-    .toArray()
-
-  return {
-    sessionId: lastSession.id,
-    sets: sets
-      .filter((s) => exercises.some((e) => e.id === s.exerciseId))
-      .map((s) => ({
-        exerciseId: s.exerciseId,
-        setNumber: s.setNumber,
-        weight: s.weight,
-        reps: s.reps,
-      })),
+    let latest = eligible.get(logged[0].sessionId)!
+    for (const s of logged) {
+      const session = eligible.get(s.sessionId)!
+      if (
+        session.date > latest.date ||
+        (session.date === latest.date && session.startedAt > latest.startedAt)
+      ) {
+        latest = session
+      }
+    }
+    out[ex.id] = {
+      sessionId: latest.id as number,
+      sets: logged
+        .filter((s) => s.sessionId === latest.id)
+        .sort((a, b) => a.setNumber - b.setNumber)
+        .map((s) => ({ setNumber: s.setNumber, weight: s.weight, reps: s.reps })),
+    }
   }
+  return out
 }
