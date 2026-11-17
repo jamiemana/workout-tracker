@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { MUSCLE_LABELS, type ExerciseTemplate } from '@/lib/data/templates'
-import { useWorkoutStore } from '@/lib/stores/workoutStore'
+import { useWorkoutStore, MAX_SETS } from '@/lib/stores/workoutStore'
 import { useSettingsStore } from '@/lib/stores/settingsStore'
 import { checkAndRecordPR } from '@/lib/utils/pr'
 import { computeTarget } from '@/lib/utils/progression'
@@ -57,6 +57,8 @@ export default function ExerciseBlock({
   const uncompleteSet = useWorkoutStore((s) => s.uncompleteSet)
   const markSetPR = useWorkoutStore((s) => s.markSetPR)
   const toggleExerciseSwap = useWorkoutStore((s) => s.toggleExerciseSwap)
+  const addSet = useWorkoutStore((s) => s.addSet)
+  const removeSet = useWorkoutStore((s) => s.removeSet)
   const exerciseUnit = useSettingsStore(
     (s) => s.exerciseUnits[exercise.id] ?? 'kg'
   )
@@ -226,6 +228,35 @@ export default function ExerciseBlock({
             }
           />
         ))}
+      </div>
+
+      <div
+        className="flex items-center justify-end gap-2"
+        style={{ marginLeft: indented ? 18 : 0 }}
+      >
+        <button
+          type="button"
+          aria-label={`Remove a set from ${exercise.name}`}
+          onClick={() => removeSet(exercise.id)}
+          disabled={sets.length <= 1 || sets[sets.length - 1]?.completed}
+          className="flex h-7 w-7 items-center justify-center rounded-full bg-bg-input text-text-secondary transition-colors hover:bg-bg-tertiary disabled:opacity-30"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          aria-label={`Add a set to ${exercise.name}`}
+          onClick={() => addSet(exercise.id)}
+          disabled={sets.length >= MAX_SETS}
+          className="flex h-7 w-7 items-center justify-center rounded-full bg-bg-input text-text-secondary transition-colors hover:bg-bg-tertiary disabled:opacity-30"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </button>
       </div>
 
       {nextTime?.kind === 'increase' && nextTime.unit !== 'bw' && !activeSession?.deload && (

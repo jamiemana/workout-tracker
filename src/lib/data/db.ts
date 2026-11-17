@@ -11,6 +11,8 @@ export interface WorkoutSession {
   notes: string | null
   // templateExerciseId -> currentExerciseId. Missing or equal = no swap.
   exerciseSwaps?: Record<string, string>
+  /** exerciseId -> set count chosen with the − / + buttons, this session only. */
+  setCounts?: Record<string, number>
   /** Started during a deload week: lighter targets, excluded from progression. */
   deload?: boolean
 }

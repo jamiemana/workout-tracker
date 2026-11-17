@@ -20,6 +20,9 @@ interface SetInput {
   prType: string | null
 }
 
+/** Upper limit for the + button. */
+export const MAX_SETS = 8
+
 interface WorkoutState {
   activeSession: WorkoutSession | null
   sets: SetInput[]
@@ -34,6 +37,10 @@ interface WorkoutState {
   completeSet: (exerciseId: string, setNumber: number) => Promise<LoggedSet | null>
   uncompleteSet: (exerciseId: string, setNumber: number) => Promise<void>
   markSetPR: (exerciseId: string, setNumber: number, prType: string) => void
+  /** Add a set to an exercise for this session, copying the last row. */
+  addSet: (exerciseId: string) => Promise<void>
+  /** Drop an exercise's last set for this session, unless it is ticked. */
+  removeSet: (exerciseId: string) => Promise<void>
   toggleExerciseSwap: (templateExerciseId: string) => Promise<void>
   finishWorkout: () => Promise<WorkoutSession | null>
   startRestTimer: (durationSeconds: number) => void
@@ -44,7 +51,8 @@ interface WorkoutState {
 async function buildSetInputs(
   sessionId: number,
   exercises: ExerciseTemplate[],
-  deload = false
+  deload = false,
+  setCounts: Record<string, number> = {}
 ): Promise<{ inputs: SetInput[]; targets: Record<string, ProgressionTarget> }> {
   const loggedSets = await db.loggedSets.where({ sessionId }).toArray()
   const prs = await db.personalRecords.where({ sessionId }).toArray()
@@ -64,8 +72,15 @@ async function buildSetInputs(
 
     // Deload: one set fewer per working exercise; one- and two-set
     // exercises (abs, OHP) keep their count.
-    const setCount =
+    // A count chosen with − / + this session wins, and a logged set is
+    // never hidden.
+    const planned =
       deload && !ex.warmup && ex.targetSets > 2 ? ex.targetSets - 1 : ex.targetSets
+    const lastLogged = Math.max(
+      0,
+      ...loggedSets.filter((l) => l.exerciseId === ex.id).map((l) => l.setNumber)
+    )
+    const setCount = Math.max(setCounts[ex.id] ?? planned, lastLogged)
     for (let s = 1; s <= setCount; s++) {
       const logged = loggedSets.find(
         (l) => l.exerciseId === ex.id && l.setNumber === s
@@ -147,7 +162,8 @@ export const useWorkoutStore = create<WorkoutState>()((set, get) => ({
     const { inputs, targets } = await buildSetInputs(
       sessionId,
       effectiveExercises,
-      !!session.deload
+      !!session.deload,
+      session.setCounts
     )
 
     set({ activeSession: session, sets: inputs, targets })
@@ -246,6 +262,47 @@ export const useWorkoutStore = create<WorkoutState>()((set, get) => ({
     }))
   },
 
+  addSet: async (exerciseId) => {
+    const { activeSession, sets } = get()
+    if (!activeSession?.id) return
+    const mine = sets.filter((s) => s.exerciseId === exerciseId)
+    const last = mine[mine.length - 1]
+    if (!last || mine.length >= MAX_SETS) return
+
+    const row: SetInput = {
+      exerciseId,
+      setNumber: last.setNumber + 1,
+      weight: last.weight,
+      reps: last.reps,
+      completed: false,
+      isPR: false,
+      prType: null,
+    }
+    // Keep the exercise's rows together, in order.
+    const at = sets.lastIndexOf(last) + 1
+    const setCounts = { ...(activeSession.setCounts ?? {}), [exerciseId]: mine.length + 1 }
+    await db.workoutSessions.update(activeSession.id, { setCounts })
+    set({
+      activeSession: { ...activeSession, setCounts },
+      sets: [...sets.slice(0, at), row, ...sets.slice(at)],
+    })
+  },
+
+  removeSet: async (exerciseId) => {
+    const { activeSession, sets } = get()
+    if (!activeSession?.id) return
+    const mine = sets.filter((s) => s.exerciseId === exerciseId)
+    const last = mine[mine.length - 1]
+    if (!last || mine.length <= 1 || last.completed) return
+
+    const setCounts = { ...(activeSession.setCounts ?? {}), [exerciseId]: mine.length - 1 }
+    await db.workoutSessions.update(activeSession.id, { setCounts })
+    set({
+      activeSession: { ...activeSession, setCounts },
+      sets: sets.filter((s) => s !== last),
+    })
+  },
+
   toggleExerciseSwap: async (templateExerciseId) => {
     const { activeSession } = get()
     if (!activeSession?.id) return
@@ -283,7 +340,8 @@ export const useWorkoutStore = create<WorkoutState>()((set, get) => ({
     const { inputs, targets } = await buildSetInputs(
       activeSession.id,
       effectiveExercises,
-      !!updated.deload
+      !!updated.deload,
+      updated.setCounts
     )
 
     set({ activeSession: updated, sets: inputs, targets })
