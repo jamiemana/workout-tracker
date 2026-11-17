@@ -101,16 +101,25 @@ const seatedCalf = (group: string | null, pos: 'a' | 'b' | null): ExerciseTempla
   id: 'lo_seated_calf_raise', name: 'Seated calf raise', targetSets: 3, targetReps: '10-15', supersetGroup: group, supersetPosition: pos, equipmentType: 'machine', isBodyweight: true, muscle: 'calves',
 })
 
-// Three one-set ab movements that close Push, Pull and Upper.
-const absBlock = (
-  flexion: { id: string; name: 'Swiss ball jackknife' | 'Hanging leg raise'; alternativeId: string },
-  crunchId: string,
-  pallofId: string
-): ExerciseTemplate[] => [
-  { id: flexion.id, name: flexion.name, targetSets: 1, targetReps: '12-15', supersetGroup: null, supersetPosition: null, equipmentType: 'bodyweight', isBodyweight: true, alternativeId: flexion.alternativeId, muscle: 'core' },
-  { id: crunchId, name: 'Cable crunch / weighted sit-up', targetSets: 1, targetReps: '12-15', supersetGroup: null, supersetPosition: null, equipmentType: 'cable', muscle: 'core' },
-  { id: pallofId, name: 'Pallof press', targetSets: 1, targetReps: '10-12/side', supersetGroup: null, supersetPosition: null, equipmentType: 'cable', muscle: 'core' },
-]
+// Three one-set ab movements per upper-body day. On Upper they close the
+// session; on Push and Pull two of them sit beside a compound lift whose
+// natural partner would work the same muscle, and the third closes.
+type Slot = [group: string | null, pos: 'a' | 'b' | null]
+const FINISHER: Slot = [null, null]
+
+const abFlexion = (
+  id: string,
+  name: 'Swiss ball jackknife' | 'Hanging leg raise',
+  alternativeId: string
+): ExerciseTemplate => ({
+  id, name, targetSets: 1, targetReps: '12-15', supersetGroup: null, supersetPosition: null, equipmentType: 'bodyweight', isBodyweight: true, alternativeId, muscle: 'core',
+})
+const cableCrunch = (id: string, [group, pos]: Slot = FINISHER): ExerciseTemplate => ({
+  id, name: 'Cable crunch / weighted sit-up', targetSets: 1, targetReps: '12-15', supersetGroup: group, supersetPosition: pos, equipmentType: 'cable', muscle: 'core',
+})
+const pallofPress = (id: string, [group, pos]: Slot = FINISHER): ExerciseTemplate => ({
+  id, name: 'Pallof press', targetSets: 1, targetReps: '10-12/side', supersetGroup: group, supersetPosition: pos, equipmentType: 'cable', muscle: 'core',
+})
 
 export const workoutTemplates: WorkoutTemplate[] = [
   {
@@ -121,10 +130,15 @@ export const workoutTemplates: WorkoutTemplate[] = [
       { id: 'pa_incline_db_press', name: 'Incline dumbbell press', targetSets: 3, targetReps: '6-8', supersetGroup: 'SS1', supersetPosition: 'a', equipmentType: 'dumbbell', muscle: 'chest', secondary: ['front_delt', 'triceps'] },
       { id: 'pa_lateral_raise', name: 'Lateral raise', targetSets: 4, targetReps: '12-15', supersetGroup: 'SS1', supersetPosition: 'b', equipmentType: 'dumbbell', muscle: 'side_delt' },
       { id: 'pa_seated_db_ohp', name: 'Seated dumbbell OHP', targetSets: 2, targetReps: '8-10', supersetGroup: 'SS2', supersetPosition: 'a', equipmentType: 'dumbbell', muscle: 'front_delt', secondary: ['side_delt', 'triceps'] },
-      { id: 'pa_db_fly', name: 'Dumbbell fly', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS2', supersetPosition: 'b', equipmentType: 'dumbbell', muscle: 'chest', secondary: ['front_delt'] },
+      pallofPress('pla_pallof_press', ['SS2', 'b']),
+      // Dips come before the skull crushers and are never paired with them:
+      // both load the triceps directly.
       { id: 'pb_dips', name: 'Dips', targetSets: 3, targetReps: '8-10', supersetGroup: 'SS3', supersetPosition: 'a', equipmentType: 'bodyweight', isBodyweight: true, muscle: 'triceps', secondary: ['chest', 'front_delt'] },
-      { id: 'pu_db_skull_crusher', name: 'Dumbbell skull crusher', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS3', supersetPosition: 'b', equipmentType: 'dumbbell', muscle: 'triceps' },
-      ...absBlock({ id: 'pla_swiss_ball_jackknife', name: 'Swiss ball jackknife', alternativeId: 'pla_hanging_leg_raise' }, 'pla_cable_crunch', 'pla_pallof_press'),
+      cableCrunch('pla_cable_crunch', ['SS3', 'b']),
+      { id: 'pa_db_fly', name: 'Dumbbell fly', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS4', supersetPosition: 'a', equipmentType: 'dumbbell', muscle: 'chest', secondary: ['front_delt'] },
+      { id: 'pu_db_skull_crusher', name: 'Dumbbell skull crusher', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS4', supersetPosition: 'b', equipmentType: 'dumbbell', muscle: 'triceps' },
+      // The jackknife holds a plank on the arms, so it stays clear of the presses.
+      abFlexion('pla_swiss_ball_jackknife', 'Swiss ball jackknife', 'pla_hanging_leg_raise'),
     ],
   },
   {
@@ -148,11 +162,16 @@ export const workoutTemplates: WorkoutTemplate[] = [
       bandWarmup('pla_band_er'),
       { id: 'pla_pullups', name: 'Pull-ups / lat pulldown', targetSets: 3, targetReps: '6-10', supersetGroup: 'SS1', supersetPosition: 'a', equipmentType: 'bodyweight', isBodyweight: true, muscle: 'lats', secondary: ['biceps'] },
       { id: 'plb_face_pull', name: 'Face pull', targetSets: 3, targetReps: '12-15', supersetGroup: 'SS1', supersetPosition: 'b', equipmentType: 'cable', muscle: 'rear_delt', secondary: ['upper_back'] },
+      // Rows work the biceps and rear delts, so each row takes an ab movement
+      // and the two isolations pair with each other.
       { id: 'pla_chest_supported_row', name: 'Chest supported dumbbell row', targetSets: 3, targetReps: '8-10', supersetGroup: 'SS2', supersetPosition: 'a', equipmentType: 'dumbbell', muscle: 'upper_back', secondary: ['lats', 'biceps', 'rear_delt'] },
-      { id: 'pla_rear_delt_fly', name: 'Rear delt fly', targetSets: 3, targetReps: '12-15', supersetGroup: 'SS2', supersetPosition: 'b', equipmentType: 'dumbbell', muscle: 'rear_delt', secondary: ['upper_back'] },
+      pallofPress('pl_pallof_press', ['SS2', 'b']),
       { id: 'pla_seated_cable_row', name: 'Seated cable row', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS3', supersetPosition: 'a', equipmentType: 'cable', alternativeId: 'pla_hanging_row', muscle: 'upper_back', secondary: ['lats', 'biceps', 'rear_delt'] },
-      { id: 'pla_bb_curl', name: 'Barbell or DB curl', targetSets: 3, targetReps: '8-12', supersetGroup: 'SS3', supersetPosition: 'b', equipmentType: 'barbell', muscle: 'biceps' },
-      ...absBlock({ id: 'plb_hanging_leg_raise', name: 'Hanging leg raise', alternativeId: 'plb_swiss_ball_jackknife' }, 'plb_cable_crunch', 'pl_pallof_press'),
+      cableCrunch('plb_cable_crunch', ['SS3', 'b']),
+      { id: 'pla_rear_delt_fly', name: 'Rear delt fly', targetSets: 3, targetReps: '12-15', supersetGroup: 'SS4', supersetPosition: 'a', equipmentType: 'dumbbell', muscle: 'rear_delt', secondary: ['upper_back'] },
+      { id: 'pla_bb_curl', name: 'Barbell or DB curl', targetSets: 3, targetReps: '8-12', supersetGroup: 'SS4', supersetPosition: 'b', equipmentType: 'barbell', muscle: 'biceps' },
+      // Hanging taxes grip and lats, so it closes the session.
+      abFlexion('plb_hanging_leg_raise', 'Hanging leg raise', 'plb_swiss_ball_jackknife'),
     ],
   },
   {
@@ -166,7 +185,9 @@ export const workoutTemplates: WorkoutTemplate[] = [
       { id: 'plb_single_arm_cable_row', name: 'Single arm cable row', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS2', supersetPosition: 'b', equipmentType: 'cable', alternativeId: 'plb_hanging_row', muscle: 'upper_back', secondary: ['lats', 'biceps', 'rear_delt'] },
       { id: 'pb_cable_lateral_raise', name: 'Cable lateral raise', targetSets: 4, targetReps: '12-15', supersetGroup: 'SS3', supersetPosition: 'a', equipmentType: 'cable', muscle: 'side_delt' },
       { id: 'pa_rope_pushdown', name: 'Single-arm rope pushdown', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS3', supersetPosition: 'b', equipmentType: 'cable', muscle: 'triceps' },
-      ...absBlock({ id: 'up_swiss_ball_jackknife', name: 'Swiss ball jackknife', alternativeId: 'up_hanging_leg_raise' }, 'up_cable_crunch', 'up_pallof_press'),
+      abFlexion('up_swiss_ball_jackknife', 'Swiss ball jackknife', 'up_hanging_leg_raise'),
+      cableCrunch('up_cable_crunch'),
+      pallofPress('up_pallof_press'),
     ],
   },
   {
