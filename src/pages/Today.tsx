@@ -15,6 +15,7 @@ import SupersetBlock from '@/components/workout/SupersetBlock'
 import CompletionSummary from '@/components/workout/CompletionSummary'
 import Header from '@/components/layout/Header'
 import { formatDate } from '@/lib/utils/rotation'
+import { localISODate } from '@/lib/utils/date'
 
 export default function Today() {
   const todayInfo = useRotation()
@@ -51,7 +52,7 @@ export default function Today() {
     if (workoutFinished) return
     if (todayInfo && effectiveTemplate && !activeSession && !sessionStarted.current) {
       sessionStarted.current = true
-      const today = new Date().toISOString().split('T')[0]
+      const today = localISODate()
       startSession(
         effectiveTemplate.id,
         today,

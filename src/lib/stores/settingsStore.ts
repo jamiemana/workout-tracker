@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
+import { localISODate } from '../utils/date'
 
 export type WeightUnit = 'kg' | 'lvl'
 
@@ -8,7 +9,7 @@ export const DELOAD_DAYS = 7
 function addDays(iso: string, days: number): string {
   const d = new Date(iso + 'T00:00:00')
   d.setDate(d.getDate() + days)
-  return d.toISOString().split('T')[0]
+  return localISODate(d)
 }
 
 /** First day after the deload week, as an ISO date. */
@@ -18,7 +19,7 @@ export function deloadEndsOn(startedAt: string): string {
 
 export function isDeloadActive(
   startedAt: string | null,
-  today: string = new Date().toISOString().split('T')[0]
+  today: string = localISODate()
 ): boolean {
   if (!startedAt) return false
   return today >= startedAt && today < deloadEndsOn(startedAt)
@@ -69,7 +70,7 @@ export const useSettingsStore = create<SettingsState>()(
           return { declinedIncrease: next }
         }),
       startDeload: () =>
-        set({ deloadStartedAt: new Date().toISOString().split('T')[0] }),
+        set({ deloadStartedAt: localISODate() }),
       endDeload: () => set({ deloadStartedAt: null }),
       setRestTimerDefault: (seconds) => set({ restTimerDefault: seconds }),
       setAutoBackup: (enabled) => set({ autoBackup: enabled }),

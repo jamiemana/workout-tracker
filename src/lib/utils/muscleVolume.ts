@@ -1,4 +1,5 @@
 import { db } from '../data/db'
+import { localISODate } from './date'
 import {
   MUSCLES,
   getExerciseById,
@@ -25,7 +26,7 @@ function addExercise(acc: MuscleSets, ex: ExerciseTemplate, sets: number) {
 function isoDaysAgo(days: number, from: Date): string {
   const d = new Date(from)
   d.setDate(d.getDate() - days)
-  return d.toISOString().split('T')[0]
+  return localISODate(d)
 }
 
 /**

@@ -1,5 +1,6 @@
 import Dexie, { type EntityTable, type Table } from 'dexie'
 import { toKg, type LoadUnit } from './units'
+import { localISODate } from '../utils/date'
 
 export interface WorkoutSession {
   id?: number
@@ -95,6 +96,32 @@ export async function backfillKgEquivalents(
 // toward volume, PRs and 1RM estimates. No index changes.
 db.version(2).upgrade((tx) =>
   backfillKgEquivalents(tx.table('loggedSets'), tx.table('personalRecords'))
+)
+
+/**
+ * Re-date sessions (and the PRs earned in them) by the local day they were
+ * started. Dates used to be taken from UTC, which put a morning session east
+ * of Greenwich on the previous day. Safe to re-run; also used on imports.
+ */
+export async function relocalizeSessionDates(
+  workoutSessions: Table<WorkoutSession>,
+  personalRecords: Table<PersonalRecord>
+): Promise<void> {
+  const dateBySession = new Map<number, string>()
+  await workoutSessions.toCollection().modify((s) => {
+    const started = new Date(s.startedAt)
+    if (!Number.isNaN(started.getTime())) s.date = localISODate(started)
+    if (s.id !== undefined) dateBySession.set(s.id, s.date)
+  })
+  await personalRecords.toCollection().modify((p) => {
+    const date = dateBySession.get(p.sessionId)
+    if (date) p.date = date
+  })
+}
+
+// v3: session dates follow the device's time zone instead of UTC.
+db.version(3).upgrade((tx) =>
+  relocalizeSessionDates(tx.table('workoutSessions'), tx.table('personalRecords'))
 )
 
 export { db }

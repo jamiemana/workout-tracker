@@ -1,6 +1,7 @@
 import type { WorkoutTemplate } from '../data/templates'
 import { workoutTemplates } from '../data/templates'
 import { db } from '../data/db'
+import { localISODate } from './date'
 
 // The next workout is whichever follows the most recently completed session.
 // No calendar, no rest days: Push -> Legs -> Pull -> Upper -> Lower -> Push ...
@@ -18,7 +19,7 @@ export interface RotationInfo {
 }
 
 export async function getRotationInfo(
-  today: string = new Date().toISOString().split('T')[0]
+  today: string = localISODate()
 ): Promise<RotationInfo> {
   // completedAt is indexed and IndexedDB does not index null, so this is the
   // most recently finished session (or undefined when nothing is finished).

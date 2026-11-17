@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSettingsStore, isDeloadActive, deloadEndsOn } from '@/lib/stores/settingsStore'
 import { exportAllData, shareOrDownloadJSON, importData } from '@/lib/utils/backup'
@@ -20,7 +20,12 @@ export default function Settings() {
   const deloadActive = isDeloadActive(deloadStartedAt)
 
   const [resetStep, setResetStep] = useState(0)
-  const [importStatus, setImportStatus] = useState<string | null>(null)
+  const [importStatus, setImportStatus] = useState<{ ok: boolean; text: string } | null>(null)
+  // Whether the browser has agreed not to evict this app's data under pressure.
+  const [persisted, setPersisted] = useState<boolean | null>(null)
+  useEffect(() => {
+    navigator.storage?.persisted?.().then(setPersisted, () => setPersisted(null))
+  }, [])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleExport = async () => {
@@ -38,10 +43,11 @@ export default function Settings() {
 
     try {
       const text = await file.text()
-      await importData(text, 'replace')
-      setImportStatus('Data imported successfully')
+      await importData(text)
+      setImportStatus({ ok: true, text: 'Data imported successfully' })
     } catch (err) {
-      setImportStatus('Import failed: invalid file')
+      const reason = err instanceof Error ? err.message : 'invalid file'
+      setImportStatus({ ok: false, text: `Import failed: ${reason}. Your data is unchanged.` })
     }
 
     if (fileInputRef.current) fileInputRef.current.value = ''
@@ -176,7 +182,16 @@ export default function Settings() {
           className="hidden"
         />
         {importStatus && (
-          <p className="text-xs text-accent-lime">{importStatus}</p>
+          <p className={`text-xs ${importStatus.ok ? 'text-accent-lime' : 'text-accent-coral'}`}>
+            {importStatus.text}
+          </p>
+        )}
+        {persisted !== null && (
+          <p className="text-xs text-text-tertiary">
+            {persisted
+              ? 'Storage is protected: the browser will not clear your workouts to free space.'
+              : 'The browser may clear your workouts if the device runs low on space. Add the app to your home screen and keep backups.'}
+          </p>
         )}
 
         {/* Reset */}
