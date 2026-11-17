@@ -101,8 +101,9 @@ const seatedCalf = (group: string | null, pos: 'a' | 'b' | null): ExerciseTempla
   id: 'lo_seated_calf_raise', name: 'Seated calf raise', targetSets: 3, targetReps: '10-15', supersetGroup: group, supersetPosition: pos, equipmentType: 'machine', isBodyweight: true, muscle: 'calves',
 })
 
-// Three one-set ab movements per upper-body day. On Upper they close the
-// session; on Push and Pull two of them sit beside a compound lift whose
+// Four ab sets per upper-body day across three movements: the cable crunch,
+// the one that can be loaded, takes two and the others one. On Upper they
+// close the session; on Push and Pull two of them sit beside a compound lift whose
 // natural partner would work the same muscle, and the third closes.
 type Slot = [group: string | null, pos: 'a' | 'b' | null]
 const FINISHER: Slot = [null, null]
@@ -115,7 +116,7 @@ const abFlexion = (
   id, name, targetSets: 1, targetReps: '12-15', supersetGroup: null, supersetPosition: null, equipmentType: 'bodyweight', isBodyweight: true, alternativeId, muscle: 'core',
 })
 const cableCrunch = (id: string, [group, pos]: Slot = FINISHER): ExerciseTemplate => ({
-  id, name: 'Cable crunch / weighted sit-up', targetSets: 1, targetReps: '12-15', supersetGroup: group, supersetPosition: pos, equipmentType: 'cable', muscle: 'core',
+  id, name: 'Cable crunch / weighted sit-up', targetSets: 2, targetReps: '12-15', supersetGroup: group, supersetPosition: pos, equipmentType: 'cable', muscle: 'core',
 })
 const pallofPress = (id: string, [group, pos]: Slot = FINISHER): ExerciseTemplate => ({
   id, name: 'Pallof press', targetSets: 1, targetReps: '10-12/side', supersetGroup: group, supersetPosition: pos, equipmentType: 'cable', muscle: 'core',
