@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { db, type WorkoutSession, type LoggedSet } from '@/lib/data/db'
 import { getExerciseById, getTemplateById, getTemplateName } from '@/lib/data/templates'
 import { formatDate } from '@/lib/utils/rotation'
+import { totalVolumeKg } from '@/lib/utils/volume'
 import Header from '@/components/layout/Header'
 
 interface SessionWithDetails extends WorkoutSession {
@@ -46,10 +47,7 @@ export default function Log() {
       const sets = await db.loggedSets.where('sessionId').equals(session.id).toArray()
       const prs = await db.personalRecords.where('sessionId').equals(session.id).toArray()
 
-      // Only kg sets contribute to total volume — lvl and bw don't combine meaningfully.
-      const totalVolume = sets
-        .filter((s) => s.completed && s.unit === 'kg')
-        .reduce((t, s) => t + (s.weight ?? 0) * s.reps, 0)
+      const totalVolume = totalVolumeKg(sets)
 
       let durationMinutes = 0
       if (session.startedAt && session.completedAt) {

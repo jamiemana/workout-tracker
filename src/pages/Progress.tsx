@@ -27,7 +27,6 @@ import {
   type MuscleSets,
 } from '@/lib/utils/muscleVolume'
 import { getRotationInfo } from '@/lib/utils/rotation'
-import { useSettingsStore } from '@/lib/stores/settingsStore'
 import StatCard from '@/components/progress/StatCard'
 import MuscleCard from '@/components/progress/MuscleCard'
 import BodyMap from '@/components/progress/BodyMap'
@@ -44,11 +43,6 @@ type ChartMode = 'weight' | '1rm'
 export default function Progress() {
   const exercises = useMemo(() => getAllExercises(), [])
   const [selectedExId, setSelectedExId] = useState(exercises[0]?.id ?? '')
-  const unit = useSettingsStore(
-    (s) => s.exerciseUnits[selectedExId] ?? 'kg'
-  )
-  const unitSuffix = unit === 'lvl' ? '' : 'kg'
-  const unitPrefix = unit === 'lvl' ? 'L' : ''
   const [chartData, setChartData] = useState<ChartPoint[]>([])
   const [mode, setMode] = useState<ChartMode>('weight')
   const [allTimePR, setAllTimePR] = useState<number>(0)
@@ -84,12 +78,18 @@ export default function Progress() {
     loadExerciseData(selectedExId)
   }, [selectedExId])
 
+  // Loads are charted in kg; sets logged in levels use their kg equivalent.
   async function loadExerciseData(exerciseId: string) {
-    const sets = await db.loggedSets
+    const logged = await db.loggedSets
       .where('exerciseId')
       .equals(exerciseId)
-      .filter((s) => s.completed && s.weight !== null && s.weight > 0)
+      .filter((s) => s.completed && s.weightKg !== null && s.weightKg > 0)
       .toArray()
+    const sets = logged.map((s) => ({
+      sessionId: s.sessionId,
+      weight: s.weightKg as number,
+      reps: s.reps,
+    }))
 
     // Get session dates
     const sessionIds = [...new Set(sets.map((s) => s.sessionId))]
@@ -108,7 +108,7 @@ export default function Progress() {
       const date = sessionDateMap.get(s.sessionId)
       if (!date) continue
       const existing = byDate.get(date) || []
-      existing.push({ weight: s.weight!, reps: s.reps })
+      existing.push({ weight: s.weight, reps: s.reps })
       byDate.set(date, existing)
     }
 
@@ -136,12 +136,9 @@ export default function Progress() {
         .filter((s) => sessionDateMap.get(s.sessionId) === last.date)
         .reduce(
           (best, s) =>
-            (s.weight ?? 0) * s.reps > (best.weight ?? 0) * best.reps ? s : best,
-          sets[0]
+            s.weight * s.reps > best.weight * best.reps ? s : best
         )
-      setCurrentBest(
-        `${unitPrefix}${bestSet.weight}${unitSuffix} × ${bestSet.reps}`
-      )
+      setCurrentBest(`${bestSet.weight}kg × ${bestSet.reps}`)
 
       if (points.length >= 2) {
         const first = points[0].maxWeight
@@ -322,7 +319,7 @@ export default function Progress() {
           <StatCard label="Current Best" value={currentBest} accent="lime" />
           <StatCard
             label="All-Time PR"
-            value={`${unitPrefix}${allTimePR}${unitSuffix}`}
+            value={`${allTimePR}kg`}
             accent="violet"
           />
           <StatCard

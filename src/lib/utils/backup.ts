@@ -1,4 +1,4 @@
-import { db } from '../data/db'
+import { db, backfillKgEquivalents } from '../data/db'
 
 export interface BackupData {
   version: 1
@@ -118,4 +118,7 @@ export async function importData(
       })
     )
   }
+
+  // Backups written before sets stored a kg equivalent have none.
+  await backfillKgEquivalents(db.loggedSets, db.personalRecords)
 }

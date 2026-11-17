@@ -123,7 +123,7 @@ export const workoutTemplates: WorkoutTemplate[] = [
       { id: 'pa_seated_db_ohp', name: 'Seated dumbbell OHP', targetSets: 2, targetReps: '8-10', supersetGroup: 'SS2', supersetPosition: 'a', equipmentType: 'dumbbell', muscle: 'front_delt', secondary: ['side_delt', 'triceps'] },
       { id: 'pa_db_fly', name: 'Dumbbell fly', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS2', supersetPosition: 'b', equipmentType: 'dumbbell', muscle: 'chest', secondary: ['front_delt'] },
       { id: 'pb_dips', name: 'Dips', targetSets: 3, targetReps: '8-10', supersetGroup: 'SS3', supersetPosition: 'a', equipmentType: 'bodyweight', isBodyweight: true, muscle: 'triceps', secondary: ['chest', 'front_delt'] },
-      { id: 'plb_ez_bar_curl', name: 'EZ bar curl', targetSets: 3, targetReps: '8-12', supersetGroup: 'SS3', supersetPosition: 'b', equipmentType: 'barbell', muscle: 'biceps' },
+      { id: 'pu_db_skull_crusher', name: 'Dumbbell skull crusher', targetSets: 3, targetReps: '10-12', supersetGroup: 'SS3', supersetPosition: 'b', equipmentType: 'dumbbell', muscle: 'triceps' },
       ...absBlock({ id: 'pla_swiss_ball_jackknife', name: 'Swiss ball jackknife', alternativeId: 'pla_hanging_leg_raise' }, 'pla_cable_crunch', 'pla_pallof_press'),
     ],
   },
@@ -285,6 +285,21 @@ export const alternativeExercises: Record<string, ExerciseTemplate> = {
   },
 }
 
+// Exercises dropped from the program. Kept so logged sets still show their
+// name in the Log and count toward the trailing week's muscle volume.
+export const retiredExercises: Record<string, ExerciseTemplate> = {
+  plb_ez_bar_curl: {
+    id: 'plb_ez_bar_curl',
+    muscle: 'biceps',
+    name: 'EZ bar curl',
+    targetSets: 3,
+    targetReps: '8-12',
+    supersetGroup: 'SS3',
+    supersetPosition: 'b',
+    equipmentType: 'barbell',
+  },
+}
+
 export function getTemplateById(id: string): WorkoutTemplate | undefined {
   return workoutTemplates.find((t) => t.id === id)
 }
@@ -294,7 +309,7 @@ export function getExerciseById(id: string): ExerciseTemplate | undefined {
     const found = t.exercises.find((e) => e.id === id)
     if (found) return found
   }
-  return alternativeExercises[id]
+  return alternativeExercises[id] ?? retiredExercises[id]
 }
 
 /** Every rotation exercise once, in program order (shared movements dedupe). */

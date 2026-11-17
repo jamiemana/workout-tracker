@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { db, type LoggedSet, type WorkoutSession } from '../data/db'
+import { toKg } from '../data/units'
 import {
   applyExerciseSwaps,
   getExerciseById,
@@ -179,12 +180,14 @@ export const useWorkoutStore = create<WorkoutState>()((set, get) => ({
     const exerciseUnit =
       useSettingsStore.getState().exerciseUnits[exerciseId] ?? 'kg'
 
+    const unit = isBodyweight ? 'bw' : exerciseUnit
     const loggedSet: LoggedSet = {
       sessionId: activeSession.id,
       exerciseId,
       setNumber,
       weight,
-      unit: isBodyweight ? 'bw' : exerciseUnit,
+      unit,
+      weightKg: toKg(weight, unit),
       reps,
       completed: true,
       timestamp: new Date().toISOString(),

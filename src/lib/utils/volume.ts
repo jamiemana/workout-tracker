@@ -1,18 +1,14 @@
-import { db } from '../data/db'
+import { db, type LoggedSet } from '../data/db'
 
-export function calculateSetVolume(weight: number | null, reps: number): number {
-  if (weight === null || weight <= 0) return 0
-  return weight * reps
-}
-
-export async function getSessionVolume(sessionId: number): Promise<number> {
-  const sets = await db.loggedSets.where('sessionId').equals(sessionId).toArray()
-  return sets.reduce((total, s) => {
-    if (s.completed && s.weight !== null && s.unit === 'kg') {
-      return total + s.weight * s.reps
-    }
-    return total
-  }, 0)
+/**
+ * kg lifted across completed sets. Level sets count at their kg equivalent;
+ * bodyweight sets carry no load and add nothing.
+ */
+export function totalVolumeKg(sets: LoggedSet[]): number {
+  return sets.reduce(
+    (t, s) => (s.completed && s.weightKg !== null ? t + s.weightKg * s.reps : t),
+    0
+  )
 }
 
 export async function getSessionStats(sessionId: number) {
@@ -23,10 +19,7 @@ export async function getSessionStats(sessionId: number) {
   const prs = await db.personalRecords.where('sessionId').equals(sessionId).toArray()
 
   const completedSets = sets.filter((s) => s.completed)
-  // Only kg sets contribute — lvl and bw don't combine meaningfully with weight.
-  const totalVolume = completedSets.reduce((t, s) => {
-    return s.unit === 'kg' ? t + (s.weight ?? 0) * s.reps : t
-  }, 0)
+  const totalVolume = totalVolumeKg(completedSets)
 
   let durationMinutes = 0
   if (session.startedAt && session.completedAt) {

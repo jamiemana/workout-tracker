@@ -105,14 +105,7 @@ export default function ExerciseBlock({
       return
     }
 
-    const result = await checkAndRecordPR(
-      exercise.id,
-      logged.weight,
-      logged.reps,
-      activeSession.id,
-      activeSession.date,
-      logged.id
-    )
+    const result = await checkAndRecordPR(logged, activeSession.date)
 
     if (result.isPR && result.prType) {
       markSetPR(exercise.id, setNumber, result.prType)
